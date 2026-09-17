@@ -163,7 +163,7 @@ export function ActiveWorkout({ workout, onFinished, onDeleted }: Props) {
       if (empty) {
         await deleteWorkout(workout.id);
       } else {
-        await finishWorkout(workout.id);
+        await finishWorkout(workout);
       }
       await forgetRoutine(workout.id);
       if (empty) onDeleted();
@@ -178,7 +178,7 @@ export function ActiveWorkout({ workout, onFinished, onDeleted }: Props) {
     <View style={styles.screen}>
       <View style={styles.topBar}>
         <View style={styles.clock}>
-          <Elapsed since={workout.started_at} style={styles.clockValue} />
+          <Elapsed workout={workout} style={styles.clockValue} />
           <Text style={styles.clockLabel}>
             {routine ? `${routine.name} · ` : ''}Started {formatTime(workout.started_at)}
           </Text>

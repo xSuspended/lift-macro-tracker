@@ -9,7 +9,7 @@ import { WorkoutSummary } from '@/components/workout-summary';
 import { errorMessage, formatDay } from '@/lib/format';
 import { colors, spacing } from '@/lib/theme';
 import type { WorkoutDetail } from '@/lib/types';
-import { getWorkoutDetail } from '@/lib/workouts';
+import { getWorkoutDetail, unpauseWorkout } from '@/lib/workouts';
 
 /** One workout: the logging screen while it's running, a summary once finished. */
 export default function SessionScreen() {
@@ -20,6 +20,14 @@ export default function SessionScreen() {
   const load = useCallback(() => {
     setError(null);
     getWorkoutDetail(id)
+      .then(async (found) => {
+        // Going back into a paused workout means you're training again.
+        if (!found.finished_at && found.paused_at) {
+          await unpauseWorkout(found);
+          return getWorkoutDetail(id);
+        }
+        return found;
+      })
       .then(setWorkout)
       .catch((e) => setError(errorMessage(e)));
   }, [id]);

@@ -83,6 +83,9 @@ create table public.workouts (
   user_id uuid not null references auth.users on delete cascade default auth.uid(),
   started_at timestamptz not null default now(),
   finished_at timestamptz,
+  -- When the current pause began (null while running), and total time paused so far.
+  paused_at timestamptz,
+  paused_seconds integer not null default 0 check (paused_seconds >= 0),
   notes text,
   created_at timestamptz not null default now()
 );

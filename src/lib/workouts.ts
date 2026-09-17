@@ -1,7 +1,7 @@
 import { supabase } from './supabase';
 import type { LoggedSet, Workout, WorkoutDetail, WorkoutHistoryItem, WorkoutSet } from './types';
 
-const WORKOUT_COLUMNS = 'id, started_at, finished_at, notes';
+const WORKOUT_COLUMNS = 'id, started_at, finished_at, paused_at, paused_seconds, notes';
 const SET_COLUMNS = 'id, workout_id, exercise_id, set_number, reps, weight_kg, rpe, is_warmup, created_at';
 
 /** The workout you started but have not finished, if any. */
@@ -27,11 +27,48 @@ export async function startWorkout(): Promise<Workout> {
   return data;
 }
 
-export async function finishWorkout(id: string) {
+/** Seconds paused in total, counting a pause that is still going on. */
+type PauseFields = Pick<Workout, 'started_at' | 'paused_at' | 'paused_seconds'>;
+
+function totalPausedSeconds(workout: PauseFields, now: number) {
+  const current = workout.paused_at ? Math.round((now - Date.parse(workout.paused_at)) / 1000) : 0;
+  return workout.paused_seconds + Math.max(0, current);
+}
+
+/** How long the workout has actually been running, in milliseconds. */
+export function activeDurationMs(workout: PauseFields, now = Date.now()) {
+  const end = workout.paused_at ? Date.parse(workout.paused_at) : now;
+  return Math.max(0, end - Date.parse(workout.started_at) - workout.paused_seconds * 1000);
+}
+
+export async function pauseWorkout(workout: Workout) {
+  if (workout.paused_at) return;
   const { error } = await supabase
     .from('workouts')
-    .update({ finished_at: new Date().toISOString() })
-    .eq('id', id);
+    .update({ paused_at: new Date().toISOString() })
+    .eq('id', workout.id);
+  if (error) throw error;
+}
+
+export async function unpauseWorkout(workout: Workout) {
+  if (!workout.paused_at) return;
+  const { error } = await supabase
+    .from('workouts')
+    .update({ paused_at: null, paused_seconds: totalPausedSeconds(workout, Date.now()) })
+    .eq('id', workout.id);
+  if (error) throw error;
+}
+
+export async function finishWorkout(workout: Workout) {
+  const now = Date.now();
+  const { error } = await supabase
+    .from('workouts')
+    .update({
+      finished_at: new Date(now).toISOString(),
+      paused_at: null,
+      paused_seconds: totalPausedSeconds(workout, now),
+    })
+    .eq('id', workout.id);
   if (error) throw error;
 }
 
@@ -65,7 +102,7 @@ export async function getWorkoutDetail(id: string): Promise<WorkoutDetail> {
 export async function listWorkoutHistory(): Promise<WorkoutHistoryItem[]> {
   const { data, error } = await supabase
     .from('workouts')
-    .select('id, started_at, finished_at, workout_sets(is_warmup, created_at, exercises(name))')
+    .select('id, started_at, finished_at, paused_seconds, workout_sets(is_warmup, created_at, exercises(name))')
     .not('finished_at', 'is', null)
     .order('started_at', { ascending: false })
     .limit(100);
@@ -75,6 +112,7 @@ export async function listWorkoutHistory(): Promise<WorkoutHistoryItem[]> {
     id: string;
     started_at: string;
     finished_at: string;
+    paused_seconds: number;
     workout_sets: { is_warmup: boolean; created_at: string; exercises: { name: string } }[];
   }[];
 
@@ -85,6 +123,7 @@ export async function listWorkoutHistory(): Promise<WorkoutHistoryItem[]> {
       id: w.id,
       started_at: w.started_at,
       finished_at: w.finished_at,
+      paused_seconds: w.paused_seconds,
       workingSetCount: sets.filter((s) => !s.is_warmup).length,
       exerciseNames,
     };

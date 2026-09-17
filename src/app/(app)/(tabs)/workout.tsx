@@ -1,8 +1,10 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { Elapsed } from '@/components/elapsed';
 import { HistoryRow } from '@/components/history-row';
 import { RoutineCard } from '@/components/routine-card';
 import { LoadingScreen } from '@/components/screen';
@@ -18,7 +20,9 @@ import {
   getActiveWorkout,
   getWorkoutDetail,
   listWorkoutHistory,
+  pauseWorkout,
   startWorkout,
+  unpauseWorkout,
 } from '@/lib/workouts';
 
 type Loaded = { active: Workout | null; routines: Routine[]; history: WorkoutHistoryItem[] };
@@ -27,6 +31,7 @@ export default function WorkoutTab() {
   const [data, setData] = useState<Loaded | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [pausing, setPausing] = useState(false);
 
   // Reload whenever this tab comes back into view, e.g. after finishing a workout.
   const load = useCallback(() => {
@@ -64,6 +69,21 @@ export default function WorkoutTab() {
       if (routine) await rememberRoutine(workout.id, routine.id);
       openWorkout(workout.id);
     });
+
+  async function togglePause(workout: Workout) {
+    setError(null);
+    setPausing(true);
+    try {
+      if (workout.paused_at) await unpauseWorkout(workout);
+      else await pauseWorkout(workout);
+      const active = await getActiveWorkout();
+      setData((current) => (current ? { ...current, active } : current));
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setPausing(false);
+    }
+  }
 
   async function quit(workout: Workout) {
     setError(null);
@@ -105,19 +125,37 @@ export default function WorkoutTab() {
       ListHeaderComponent={
         <View style={styles.header}>
           {active ? (
-            <View style={styles.activeCard}>
-              <Text style={styles.activeTitle}>Workout in progress</Text>
+            <View style={[styles.activeCard, active.paused_at && styles.activeCardPaused]}>
+              <View style={styles.activeHeader}>
+                <Text style={styles.activeTitle}>{active.paused_at ? 'Workout paused' : 'Workout in progress'}</Text>
+                <View style={styles.clock}>
+                  <Ionicons
+                    name={active.paused_at ? 'pause' : 'time-outline'}
+                    size={15}
+                    color={active.paused_at ? colors.warning : colors.textDim}
+                  />
+                  <Elapsed workout={active} style={[styles.clockText, active.paused_at ? styles.clockPaused : {}]} />
+                </View>
+              </View>
               <Text style={styles.activeMeta}>Started {formatTime(active.started_at)}</Text>
               <View style={styles.activeButtons}>
-                <View style={styles.resume}>
-                  <Button label="Resume workout" onPress={() => openWorkout(active.id)} />
+                <View style={styles.hopIn}>
+                  <Button label="Hop back in" onPress={() => openWorkout(active.id)} />
+                </View>
+                <View style={styles.pause}>
+                  <Button
+                    label={active.paused_at ? 'Unpause' : 'Pause'}
+                    onPress={() => togglePause(active)}
+                    variant="warning"
+                    loading={pausing}
+                    compact
+                  />
                 </View>
                 <TooltipIconButton
                   icon="trash-outline"
                   label="Quit workout"
                   color={colors.danger}
                   onPress={() => quit(active)}
-                  loading={busy}
                   style={styles.quit}
                 />
               </View>
@@ -178,12 +216,28 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     gap: spacing.sm,
   },
-  activeTitle: { color: colors.text, fontSize: 18, fontWeight: '700' },
+  activeCardPaused: { borderColor: colors.warning },
+  activeHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md },
+  activeTitle: { flex: 1, color: colors.text, fontSize: 18, fontWeight: '700' },
+  clock: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    borderRadius: radius.sm,
+    backgroundColor: colors.bg,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  clockText: { color: colors.text, fontSize: 13, fontWeight: '600' },
+  clockPaused: { color: colors.warning },
   activeMeta: { color: colors.textDim, fontSize: 14, marginBottom: spacing.sm },
-  // 90 / 10 split, but the bin never shrinks below a thumb-sized square on a phone.
+  // Hop back in / Pause share the row 70 / 30; the bin keeps a fixed thumb-sized square.
   activeButtons: { flexDirection: 'row', gap: spacing.sm },
-  resume: { flex: 9 },
-  quit: { flex: 1, minWidth: TAP_TARGET },
+  hopIn: { flex: 7 },
+  pause: { flex: 3 },
+  quit: { width: TAP_TARGET },
   errorBox: { gap: spacing.md },
   error: { color: colors.danger, fontSize: 15 },
   section: { gap: spacing.sm },

@@ -12,7 +12,7 @@ export function HistoryRow({ item, onPress }: { item: WorkoutHistoryItem; onPres
         <View style={styles.top}>
           <Text style={styles.day}>{formatDay(item.started_at)}</Text>
           <Text style={styles.meta}>
-            {formatMinutes(item.started_at, item.finished_at)} · {item.workingSetCount}{' '}
+            {formatMinutes(item.started_at, item.finished_at, item.paused_seconds)} · {item.workingSetCount}{' '}
             {item.workingSetCount === 1 ? 'set' : 'sets'}
           </Text>
         </View>

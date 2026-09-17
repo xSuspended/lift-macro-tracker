@@ -13,8 +13,9 @@ export function formatClock(ms: number) {
   return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
 }
 
-export function formatMinutes(startIso: string, endIso: string) {
-  const minutes = Math.round((Date.parse(endIso) - Date.parse(startIso)) / 60000);
+/** Workout length, leaving out time spent paused. */
+export function formatMinutes(startIso: string, endIso: string, pausedSeconds = 0) {
+  const minutes = Math.max(0, Math.round((Date.parse(endIso) - Date.parse(startIso) - pausedSeconds * 1000) / 60000));
   return minutes < 60 ? `${minutes} min` : `${Math.floor(minutes / 60)} h ${minutes % 60} min`;
 }
 

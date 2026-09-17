@@ -57,7 +57,7 @@ export function WorkoutSummary({ workout, onDeleted }: Props) {
     <ScrollView contentContainerStyle={styles.content}>
       <View style={styles.stats}>
         <Text style={styles.meta}>
-          {formatTime(workout.started_at)} · {formatMinutes(workout.started_at, workout.finished_at)} ·{' '}
+          {formatTime(workout.started_at)} · {formatMinutes(workout.started_at, workout.finished_at, workout.paused_seconds)} ·{' '}
           {workingCount} working {workingCount === 1 ? 'set' : 'sets'}
         </Text>
       </View>

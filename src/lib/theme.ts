@@ -12,6 +12,8 @@ export const colors = {
   accentPressed: '#2563EB',
   onAccent: '#FFFFFF',
   danger: '#F87171',
+  warning: '#EAB308',
+  onWarning: '#0B0F14',
   success: '#4ADE80',
 };
 

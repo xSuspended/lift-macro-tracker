@@ -12,6 +12,10 @@ export type Workout = {
   id: string;
   started_at: string;
   finished_at: string | null;
+  /** When the current pause began; null while the clock is running. */
+  paused_at: string | null;
+  /** Total seconds spent paused, left out of the workout's duration. */
+  paused_seconds: number;
   notes: string | null;
 };
 
@@ -65,6 +69,7 @@ export type WorkoutHistoryItem = {
   id: string;
   started_at: string;
   finished_at: string;
+  paused_seconds: number;
   workingSetCount: number;
   exerciseNames: string[];
 };
