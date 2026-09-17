@@ -106,14 +106,14 @@ export default function WorkoutTab() {
               />
             ))}
             <View style={styles.buttons}>
+              {!active ? (
+                <View style={styles.flex}>
+                  <Button label="New workout" onPress={() => start()} variant="secondary" disabled={busy} />
+                </View>
+              ) : null}
               <View style={styles.flex}>
                 <Button label="New routine" onPress={newRoutine} variant="secondary" disabled={busy} />
               </View>
-              {!active ? (
-                <View style={styles.flex}>
-                  <Button label="Empty workout" onPress={() => start()} variant="secondary" disabled={busy} />
-                </View>
-              ) : null}
             </View>
           </View>
 
