@@ -1,17 +1,9 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Redirect, Tabs } from 'expo-router';
+import { Tabs } from 'expo-router';
 
-import { LoadingScreen } from '@/components/screen';
-import { useAuth } from '@/lib/auth';
 import { colors } from '@/lib/theme';
 
-/** The signed-in part of the app. Kicks you back to sign-in if logged out. */
 export default function TabsLayout() {
-  const { session, loading } = useAuth();
-
-  if (loading) return <LoadingScreen />;
-  if (!session) return <Redirect href="/sign-in" />;
-
   return (
     <Tabs
       screenOptions={{

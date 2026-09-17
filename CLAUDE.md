@@ -39,6 +39,10 @@ prefer boring, well-documented tools over clever ones.
 - Dark UI with big tap targets — sets get logged mid-workout with sweaty hands.
   Colours and spacing live in `src/lib/theme.ts`; `TAP_TARGET` is the minimum
   height for anything tappable.
+- Screens behind the login live under `src/app/(app)/`, whose layout does the
+  signed-in check. Put new logged-in screens there, not at the top level.
+- The owner wants things kept simple: one double-progression rule with defaults,
+  no alternative training schemes or elaborate settings.
 - `app.json` uses `web.output: "single"`. Do not switch it back to `"static"`:
   static output pre-renders in Node, where `window` is undefined and
   AsyncStorage-backed Supabase sessions crash the build.
@@ -59,8 +63,7 @@ prefer boring, well-documented tools over clever ones.
 ## Phases
 
 1. **Setup + auth** — done.
-2. Workout logging: start a workout, pick exercises (built-in + custom), add sets
-   (reps, weight, optional RPE, warm-up toggle), finish, history list and detail.
+2. **Workout logging** — done.
 3. Progression: "last time" while logging; routines with target sets and rep
    range; double progression (all working sets hit `rep_max` last time →
    suggest `+increment_kg`, otherwise same weight and aim for more reps);
