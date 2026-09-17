@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Line, Path, Text as SvgText } from 'react-native-svg';
 
+import { CHART_FONT, niceScale } from '@/lib/chart';
 import { fromDateKey } from '@/lib/dates';
 import { colors, macroColors, spacing } from '@/lib/theme';
 import type { DayTotals, Targets } from '@/lib/types';
@@ -13,8 +14,8 @@ type Props = {
   targets: { [K in keyof Targets]: number };
 };
 
-const HEIGHT = 160;
-const PAD = { top: 8, right: 38, bottom: 20, left: 30 };
+const HEIGHT = 190;
+const PAD = { top: 8, right: 38, bottom: 22, left: 36 };
 
 // Drawn in this order, so calories ends up on top.
 const SERIES = [
@@ -40,15 +41,15 @@ export function MacroChart({ days, totals, targets }: Props) {
     }),
   }));
 
-  const highest = Math.max(100, ...series.flatMap((s) => s.values.filter((v): v is number => v !== null)));
-  const gridStep = highest > 150 ? 50 : 25;
-  const yMax = Math.ceil((highest + 5) / gridStep) * gridStep;
-  const gridValues = Array.from({ length: yMax / gridStep + 1 }, (_, i) => i * gridStep);
+  // Always keep the 100% target line in view.
+  const allValues = series.flatMap((s) => s.values.filter((v): v is number => v !== null));
+  const scale = niceScale(Math.min(100, ...allValues), Math.max(100, ...allValues), 5);
+  const gridValues = scale.ticks;
 
   const plotW = Math.max(0, width - PAD.left - PAD.right);
   const plotH = HEIGHT - PAD.top - PAD.bottom;
   const x = (i: number) => PAD.left + (days.length === 1 ? plotW / 2 : (i / (days.length - 1)) * plotW);
-  const y = (v: number) => PAD.top + plotH - (Math.min(v, yMax) / yMax) * plotH;
+  const y = (v: number) => PAD.top + plotH - ((v - scale.min) / (scale.max - scale.min)) * plotH;
 
   // Days without any food are gaps, not zero, so a missed day doesn't dive the line.
   const pathFor = (values: (number | null)[]) =>
@@ -87,7 +88,7 @@ export function MacroChart({ days, totals, targets }: Props) {
               />
             ))}
             {gridValues.map((v) => (
-              <SvgText key={`y-${v}`} x={PAD.left - 5} y={y(v) + 3} fontSize={9} fill={colors.textDim} textAnchor="end">
+              <SvgText key={`y-${v}`} x={PAD.left - 5} y={y(v) + 3} fontSize={10} fontFamily={CHART_FONT} fill={colors.textDim} textAnchor="end">
                 {`${v}%`}
               </SvgText>
             ))}
@@ -120,13 +121,13 @@ export function MacroChart({ days, totals, targets }: Props) {
             })}
 
             {labels.map((l) => (
-              <SvgText key={`label-${l.text}`} x={x(l.i) + 8} y={l.y + 3} fontSize={9} fontWeight="700" fill={colors.textDim}>
+              <SvgText key={`label-${l.text}`} x={x(l.i) + 8} y={l.y + 3} fontSize={10} fontFamily={CHART_FONT} fontWeight="700" fill={colors.textDim}>
                 {l.text}
               </SvgText>
             ))}
 
             {days.map((day, i) => (
-              <SvgText key={day} x={x(i)} y={HEIGHT - 5} fontSize={9} fill={colors.textDim} textAnchor="middle">
+              <SvgText key={day} x={x(i)} y={HEIGHT - 5} fontSize={10} fontFamily={CHART_FONT} fill={colors.textDim} textAnchor="middle">
                 {fromDateKey(day).toLocaleDateString(undefined, { weekday: 'short' })}
               </SvgText>
             ))}
@@ -135,7 +136,7 @@ export function MacroChart({ days, totals, targets }: Props) {
       </View>
 
       <View style={styles.legend}>
-        {[...SERIES].reverse().map((s) => (
+        {['kcal', 'protein_g', 'carbs_g', 'fat_g'].map((key) => SERIES.find((s) => s.key === key)!).map((s) => (
           <View key={s.key} style={styles.legendItem}>
             <View style={[styles.swatch, { backgroundColor: s.color }]} />
             <Text style={styles.legendText}>{s.label}</Text>

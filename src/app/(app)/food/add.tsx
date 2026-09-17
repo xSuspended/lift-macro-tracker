@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, Stack, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { AmountSheet } from '@/components/amount-sheet';
@@ -28,16 +28,32 @@ export default function AddFoodScreen() {
   const [picked, setPicked] = useState<Food | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Food ids we've already seen, so a food created from here can be spotted
+  // on return and opened straight into the amount picker to log it.
+  const knownFoodIds = useRef<Set<string>>(new Set());
+  const creatingFood = useRef(false);
+
   // Reload when coming back from creating or editing a food.
   const load = useCallback(() => {
     Promise.all([listFoods(), listSavedMeals()])
       .then(([f, m]) => {
+        if (creatingFood.current) {
+          creatingFood.current = false;
+          const created = f.find((food) => !knownFoodIds.current.has(food.id));
+          if (created) setPicked(created);
+        }
+        knownFoodIds.current = new Set(f.map((food) => food.id));
         setFoods(f);
         setSavedMeals(m);
       })
       .catch((e) => setError(errorMessage(e)));
   }, []);
   useFocusEffect(load);
+
+  function openNewFood() {
+    creatingFood.current = true;
+    router.push({ pathname: '/food/edit', params: { name: search.trim() } });
+  }
 
   const mealLabel = MEALS.find((m) => m.key === meal)?.label ?? 'Diary';
   const query = search.trim().toLowerCase();
@@ -99,7 +115,7 @@ export default function AddFoodScreen() {
             </View>
             <Pressable
               accessibilityLabel="New food"
-              onPress={() => router.push({ pathname: '/food/edit', params: { name: search.trim() } })}
+              onPress={openNewFood}
               style={({ pressed }) => [styles.newFood, pressed && styles.pressed]}>
               <Ionicons name="add" size={26} color={colors.onAccent} />
             </Pressable>
@@ -113,6 +129,9 @@ export default function AddFoodScreen() {
               keyExtractor={(f) => f.id}
               keyboardShouldPersistTaps="handled"
               contentContainerStyle={styles.list}
+              ListHeaderComponent={
+                matches.length ? <Text style={styles.dim}>Tap a food to add it to {mealLabel}.</Text> : null
+              }
               ListEmptyComponent={
                 <Text style={styles.empty}>
                   {foods.length === 0
