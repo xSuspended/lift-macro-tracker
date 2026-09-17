@@ -84,6 +84,17 @@ export async function setTargetSets(routineExerciseId: string, targetSets: numbe
   if (error) throw error;
 }
 
+/** Saves a new order: `routineExerciseIds` listed top to bottom. */
+export async function reorderRoutineExercises(routineExerciseIds: string[]) {
+  const results = await Promise.all(
+    routineExerciseIds.map((id, position) =>
+      supabase.from('routine_exercises').update({ position }).eq('id', id),
+    ),
+  );
+  const failed = results.find((r) => r.error);
+  if (failed?.error) throw failed.error;
+}
+
 export async function removeRoutineExercise(routineExerciseId: string) {
   const { error } = await supabase.from('routine_exercises').delete().eq('id', routineExerciseId);
   if (error) throw error;

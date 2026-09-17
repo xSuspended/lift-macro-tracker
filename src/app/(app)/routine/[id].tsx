@@ -4,7 +4,8 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { ExercisePicker } from '@/components/exercise-picker';
-import { RoutineExerciseRow } from '@/components/routine-exercise-row';
+import { ReorderableList } from '@/components/reorderable-list';
+import { ROUTINE_ROW_HEIGHT, RoutineExerciseRow } from '@/components/routine-exercise-row';
 import { LoadingScreen } from '@/components/screen';
 import { TextField } from '@/components/text-field';
 import { confirm } from '@/lib/confirm';
@@ -15,6 +16,7 @@ import {
   getRoutine,
   removeRoutineExercise,
   renameRoutine,
+  reorderRoutineExercises,
   setTargetSets,
 } from '@/lib/routines';
 import { colors, spacing } from '@/lib/theme';
@@ -27,6 +29,8 @@ export default function RoutineScreen() {
   const [name, setName] = useState('');
   const [pickerOpen, setPickerOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const leave = useCallback(() => {
@@ -94,6 +98,35 @@ export default function RoutineScreen() {
     save(() => removeRoutineExercise(item.id));
   }
 
+  function handleReorder(ordered: RoutineExercise[]) {
+    if (!routine) return;
+    setRoutine({ ...routine, exercises: ordered.map((e, position) => ({ ...e, position })) });
+    reorderRoutineExercises(ordered.map((e) => e.id)).catch((e) => {
+      setError(errorMessage(e));
+      refresh();
+    });
+  }
+
+  // Edits already save as you make them; this confirms the name and takes you back.
+  async function handleSave() {
+    if (!routine) return;
+    const trimmed = name.trim();
+    if (!trimmed) {
+      setError('Give the routine a name.');
+      return;
+    }
+
+    setError(null);
+    setSaving(true);
+    try {
+      if (trimmed !== routine.name) await renameRoutine(routine.id, trimmed);
+      router.dismissTo('/workout');
+    } catch (e) {
+      setError(errorMessage(e));
+      setSaving(false);
+    }
+  }
+
   async function handleDelete() {
     if (!routine) return;
     const ok = await confirm(
@@ -121,7 +154,10 @@ export default function RoutineScreen() {
   return (
     <>
       <Stack.Screen options={{ title: routine.name }} />
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        scrollEnabled={!dragging}>
         <TextField
           label="Name"
           value={name}
@@ -137,19 +173,33 @@ export default function RoutineScreen() {
           {routine.exercises.length === 0 ? (
             <Text style={styles.empty}>No exercises yet. Add the ones you do on this day.</Text>
           ) : null}
-          {routine.exercises.map((item) => (
-            <RoutineExerciseRow
-              key={item.id}
-              item={item}
-              onChangeSets={(n) => handleChangeSets(item, n)}
-              onRemove={() => handleRemove(item)}
-            />
-          ))}
+          {routine.exercises.length > 1 ? (
+            <Text style={styles.hint}>Hold the ≡ grip and drag to change the order.</Text>
+          ) : null}
+          <ReorderableList
+            items={routine.exercises}
+            keyOf={(item) => item.id}
+            rowHeight={ROUTINE_ROW_HEIGHT}
+            gap={spacing.sm}
+            onReorder={handleReorder}
+            onDragChange={setDragging}
+            renderItem={(item, dragHandlers, isDragging) => (
+              <RoutineExerciseRow
+                item={item}
+                dragHandlers={dragHandlers}
+                dragging={isDragging}
+                onChangeSets={(n) => handleChangeSets(item, n)}
+                onRemove={() => handleRemove(item)}
+              />
+            )}
+          />
         </View>
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
         <Button label="Add exercise" onPress={() => setPickerOpen(true)} variant="secondary" />
+
+        <Button label="Save routine" onPress={handleSave} loading={saving} />
 
         <View style={styles.danger}>
           <Button label="Delete routine" onPress={handleDelete} variant="danger" loading={deleting} />
@@ -172,6 +222,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   empty: { color: colors.textDim, fontSize: 15 },
+  hint: { color: colors.textDim, fontSize: 13, marginBottom: spacing.xs },
   error: { color: colors.danger, fontSize: 15 },
   padded: { padding: spacing.xl },
   danger: { marginTop: spacing.xl },

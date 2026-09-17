@@ -1,20 +1,28 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, type GestureResponderHandlers } from 'react-native';
 
-import { colors, radius, spacing, TAP_TARGET } from '@/lib/theme';
+import { colors, radius, spacing } from '@/lib/theme';
 import type { RoutineExercise } from '@/lib/types';
+
+export const ROUTINE_ROW_HEIGHT = 64;
 
 type Props = {
   item: RoutineExercise;
+  dragHandlers: GestureResponderHandlers;
+  dragging: boolean;
   onChangeSets: (targetSets: number) => void;
   onRemove: () => void;
 };
 
 const MAX_SETS = 10;
 
-export function RoutineExerciseRow({ item, onChangeSets, onRemove }: Props) {
+export function RoutineExerciseRow({ item, dragHandlers, dragging, onChangeSets, onRemove }: Props) {
   return (
-    <View style={styles.row}>
+    <View style={[styles.row, dragging && styles.dragging]}>
+      <View {...dragHandlers} accessibilityLabel={`Hold and drag to move ${item.exercise_name}`} style={styles.grip}>
+        <Ionicons name="reorder-three" size={26} color={dragging ? colors.accent : colors.textDim} />
+      </View>
+
       <View style={styles.text}>
         <Text style={styles.name} numberOfLines={1}>
           {item.exercise_name}
@@ -50,16 +58,22 @@ export function RoutineExerciseRow({ item, onChangeSets, onRemove }: Props) {
 
 const styles = StyleSheet.create({
   row: {
+    height: ROUTINE_ROW_HEIGHT,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
-    minHeight: TAP_TARGET + 8,
-    paddingLeft: spacing.lg,
     paddingRight: spacing.xs,
     backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.md,
+  },
+  dragging: { borderColor: colors.accent, backgroundColor: colors.cardPressed },
+  grip: {
+    width: 48,
+    alignSelf: 'stretch',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   text: { flex: 1, gap: 2 },
   name: { color: colors.text, fontSize: 16, fontWeight: '600' },
