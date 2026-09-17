@@ -20,10 +20,10 @@ const PAD = { top: 8, right: 38, bottom: 22, left: 36 };
 
 // Drawn in this order, so calories ends up on top.
 const SERIES = [
-  { key: 'carbs_g', target: 'target_carbs_g', label: 'Carbs', short: 'Carb', unit: 'g', color: macroColors.carbs, width: 2, dash: '6 3' },
-  { key: 'fat_g', target: 'target_fat_g', label: 'Fat', short: 'Fat', unit: 'g', color: macroColors.fat, width: 2, dash: '1 4' },
-  { key: 'protein_g', target: 'target_protein_g', label: 'Protein', short: 'Prot', unit: 'g', color: macroColors.protein, width: 2, dash: undefined },
-  { key: 'kcal', target: 'target_kcal', label: 'Calories', short: 'Cal', unit: 'kcal', color: macroColors.kcal, width: 2.6, dash: undefined },
+  { key: 'carbs_g', target: 'target_carbs_g', label: 'Carbs', short: 'Carb', unit: 'g', color: macroColors.carbs, width: 2 },
+  { key: 'fat_g', target: 'target_fat_g', label: 'Fat', short: 'Fat', unit: 'g', color: macroColors.fat, width: 2 },
+  { key: 'protein_g', target: 'target_protein_g', label: 'Protein', short: 'Prot', unit: 'g', color: macroColors.protein, width: 2 },
+  { key: 'kcal', target: 'target_kcal', label: 'Calories', short: 'Cal', unit: 'kcal', color: macroColors.kcal, width: 2.6 },
 ] as const;
 const LEGEND_ORDER = ['kcal', 'protein_g', 'carbs_g', 'fat_g'].map((key) => SERIES.find((s) => s.key === key)!);
 
@@ -123,7 +123,6 @@ export function MacroChart({ days, totals, targets }: Props) {
                   fill="none"
                   stroke={s.color}
                   strokeWidth={s.width}
-                  strokeDasharray={s.dash}
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />

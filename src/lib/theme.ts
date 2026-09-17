@@ -20,9 +20,9 @@ export const colors = {
   success: '#4ADE80',
 };
 
-// Line colours for the food chart. Green, yellow and red are hard to tell apart
-// with red-green colour blindness, so the chart also gives each line its own
-// dash pattern and an end label.
+// Macro colours. Green, yellow and red are hard to tell apart with red-green
+// colour blindness; the food chart labels each line's end so colour isn't the
+// only way to tell them apart.
 export const macroColors = {
   kcal: '#E6EDF3',
   protein: '#16A34A',
