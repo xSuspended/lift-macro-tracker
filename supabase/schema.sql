@@ -180,8 +180,9 @@ create table public.foods (
   created_at timestamptz not null default now()
 );
 
+-- One copy per user of each externally sourced food.
 create unique index foods_source_ref
-  on public.foods (source, source_ref) where source_ref is not null;
+  on public.foods (user_id, source, source_ref) where source_ref is not null;
 
 create index foods_user_name on public.foods (user_id, lower(name));
 

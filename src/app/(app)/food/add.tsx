@@ -1,16 +1,17 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, Stack, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { AmountSheet } from '@/components/amount-sheet';
 import { Button } from '@/components/button';
+import { FoodFinder } from '@/components/food-finder';
 import { Segmented } from '@/components/segmented';
 import { TextField } from '@/components/text-field';
 import { confirm } from '@/lib/confirm';
 import { describeDay } from '@/lib/dates';
 import { deleteSavedMeal, listFoods, listSavedMeals, logFood, logSavedMeal, MEALS, quickAdd } from '@/lib/food';
-import { errorMessage, formatNumber } from '@/lib/format';
+import { errorMessage } from '@/lib/format';
 import { goBack } from '@/lib/navigation';
 import { colors, radius, spacing, TAP_TARGET } from '@/lib/theme';
 import type { Food, Meal, SavedMeal } from '@/lib/types';
@@ -24,7 +25,6 @@ export default function AddFoodScreen() {
   const [tab, setTab] = useState<Tab>('foods');
   const [foods, setFoods] = useState<Food[] | null>(null);
   const [savedMeals, setSavedMeals] = useState<SavedMeal[] | null>(null);
-  const [search, setSearch] = useState('');
   const [picked, setPicked] = useState<Food | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -50,16 +50,12 @@ export default function AddFoodScreen() {
   }, []);
   useFocusEffect(load);
 
-  function openNewFood() {
+  function openNewFood(name: string) {
     creatingFood.current = true;
-    router.push({ pathname: '/food/edit', params: { name: search.trim() } });
+    router.push({ pathname: '/food/edit', params: { name } });
   }
 
   const mealLabel = MEALS.find((m) => m.key === meal)?.label ?? 'Diary';
-  const query = search.trim().toLowerCase();
-  const matches = (foods ?? []).filter(
-    (f) => f.name.toLowerCase().includes(query) || (f.brand ?? '').toLowerCase().includes(query),
-  );
 
   async function handleLogSavedMeal(saved: SavedMeal) {
     setError(null);
@@ -101,76 +97,14 @@ export default function AddFoodScreen() {
       </View>
 
       {tab === 'foods' ? (
-        <>
-          <View style={styles.searchRow}>
-            <View style={styles.search}>
-              <Ionicons name="search" size={20} color={colors.textDim} />
-              <TextInput
-                value={search}
-                onChangeText={setSearch}
-                placeholder="Search your foods"
-                placeholderTextColor={colors.textDim}
-                style={styles.searchInput}
-              />
-            </View>
-            <Pressable
-              accessibilityLabel="New food"
-              onPress={openNewFood}
-              style={({ pressed }) => [styles.newFood, pressed && styles.pressed]}>
-              <Ionicons name="add" size={26} color={colors.onAccent} />
-            </Pressable>
-          </View>
-
-          {foods === null ? (
-            <ActivityIndicator color={colors.accent} style={styles.loading} />
-          ) : (
-            <FlatList
-              data={matches}
-              keyExtractor={(f) => f.id}
-              keyboardShouldPersistTaps="handled"
-              contentContainerStyle={styles.list}
-              ListHeaderComponent={
-                matches.length ? <Text style={styles.dim}>Tap a food to add it to {mealLabel}.</Text> : null
-              }
-              ListEmptyComponent={
-                <Text style={styles.empty}>
-                  {foods.length === 0
-                    ? 'No foods yet. Tap + to add one from its nutrition label.'
-                    : 'No match. Tap + to add it.'}
-                </Text>
-              }
-              renderItem={({ item }) => (
-                <View style={styles.row}>
-                  <Pressable
-                    onPress={() => setPicked(item)}
-                    style={({ pressed }) => [styles.rowMain, pressed && styles.pressed]}>
-                    <Text style={styles.name} numberOfLines={1}>
-                      {item.name}
-                    </Text>
-                    <Text style={styles.meta} numberOfLines={1}>
-                      {[
-                        item.brand,
-                        item.serving_name && item.serving_grams
-                          ? `${formatNumber(Math.round((item.kcal_per_100g * item.serving_grams) / 100))} kcal per ${item.serving_name}`
-                          : `${formatNumber(item.kcal_per_100g)} kcal per 100 g`,
-                      ]
-                        .filter(Boolean)
-                        .join(' · ')}
-                    </Text>
-                  </Pressable>
-                  {item.user_id ? (
-                    <Pressable
-                      accessibilityLabel={`Edit ${item.name}`}
-                      onPress={() => router.push({ pathname: '/food/edit', params: { id: item.id } })}
-                      style={({ pressed }) => [styles.rowIcon, pressed && styles.pressed]}>
-                      <Ionicons name="create-outline" size={20} color={colors.textDim} />
-                    </Pressable>
-                  ) : null}
-                </View>
-              )}
-            />
-          )}
-        </>
+        <FoodFinder
+          foods={foods}
+          mealLabel={mealLabel}
+          onPick={setPicked}
+          onNewFood={openNewFood}
+          onEditFood={(food) => router.push({ pathname: '/food/edit', params: { id: food.id } })}
+          onFoodSaved={load}
+        />
       ) : null}
 
       {tab === 'meals' ? (
@@ -284,28 +218,6 @@ const styles = StyleSheet.create({
   top: { paddingHorizontal: spacing.lg, gap: spacing.sm },
   dim: { color: colors.textDim, fontSize: 14 },
   error: { color: colors.danger, fontSize: 15 },
-  searchRow: { flexDirection: 'row', gap: spacing.sm, paddingHorizontal: spacing.lg, paddingTop: spacing.md },
-  search: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    minHeight: TAP_TARGET,
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-  },
-  searchInput: { flex: 1, minHeight: TAP_TARGET, color: colors.text, fontSize: 17 },
-  newFood: {
-    width: TAP_TARGET,
-    height: TAP_TARGET,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: radius.md,
-    backgroundColor: colors.accent,
-  },
   loading: { marginTop: spacing.xxl },
   list: { padding: spacing.lg, gap: spacing.sm },
   empty: { color: colors.textDim, fontSize: 15, textAlign: 'center', paddingVertical: spacing.xl, lineHeight: 21 },

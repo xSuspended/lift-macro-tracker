@@ -61,7 +61,8 @@ export type FoodInput = Pick<
   | 'serving_grams'
 >;
 
-export async function createFood(food: FoodInput): Promise<Food> {
+/** `source` defaults to "custom"; foods found online pass where they came from. */
+export async function createFood(food: FoodInput & Partial<Pick<Food, 'source' | 'source_ref'>>): Promise<Food> {
   const { data, error } = await supabase.from('foods').insert(food).select(FOOD_COLUMNS).single();
   if (error) throw error;
   return data;

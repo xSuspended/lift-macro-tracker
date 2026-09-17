@@ -80,9 +80,14 @@ prefer boring, well-documented tools over clever ones.
    the Progress tab with Day / Week / Month; add food (your foods / saved meals / quick add),
    food editor, amount picker in servings or grams, saved meals, copy the
    previous day, targets in Settings.
-5. Food search: Open Food Facts (and USDA FoodData Central if a key is added);
-   cache logged results into `foods` with `source` and `source_ref`. Barcode
-   scanning on Android only if simple; hide it on web.
+5. **Food search** — done. Searching and barcode lookups go through the
+   Supabase Edge Function `supabase/functions/food-search` (Open Food Facts'
+   text search sends no CORS header, so the website can't call it directly).
+   It's deployed by pasting into the dashboard editor, not the CLI; after
+   changing the file, it must be re-pasted and redeployed. USDA uses the
+   `USDA_API_KEY` function secret, or DEMO_KEY without one. Picked results are
+   saved into `foods` with `source`/`source_ref` (unique per user). Barcode
+   scanning (expo-camera) is phone-only and hidden on web.
 6. Body weight + polish: body weight log and chart, weight unit setting,
    loading/empty/error states, offline-friendly where easy.
 7. Ship: Android APK via EAS Build; web build deployed to Vercel or Netlify.

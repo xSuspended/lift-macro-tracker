@@ -94,9 +94,9 @@ function AmountForm({ food, submitLabel, onSubmit, initialGrams, onDelete }: Omi
         </Text>
         <View style={styles.previewMacros}>
           {[
-            { label: 'P', value: preview.protein_g, color: macroColors.protein },
-            { label: 'C', value: preview.carbs_g, color: macroColors.carbs },
-            { label: 'F', value: preview.fat_g, color: macroColors.fat },
+            { label: 'Protein', value: preview.protein_g, color: macroColors.protein },
+            { label: 'Carbs', value: preview.carbs_g, color: macroColors.carbs },
+            { label: 'Fat', value: preview.fat_g, color: macroColors.fat },
           ].map((m) => (
             <View key={m.label} style={styles.macro}>
               <View style={[styles.swatch, { backgroundColor: m.color }]} />
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
   preview: { alignItems: 'center', gap: 6, paddingVertical: spacing.xs },
   previewKcal: { color: colors.text, fontSize: 32, fontWeight: '700' },
   previewUnit: { color: colors.textDim, fontSize: 16, fontWeight: '400' },
-  previewMacros: { flexDirection: 'row', gap: spacing.lg },
+  previewMacros: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', columnGap: spacing.lg, rowGap: spacing.xs },
   macro: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   swatch: { width: 8, height: 8, borderRadius: 4 },
   macroText: { color: colors.text, fontSize: 15, fontWeight: '600' },
