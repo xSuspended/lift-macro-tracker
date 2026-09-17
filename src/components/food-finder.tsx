@@ -1,11 +1,12 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { BarcodeScanner } from '@/components/barcode-scanner';
 import { Button } from '@/components/button';
 import { FoodRow } from '@/components/food-row';
 import { lookupBarcode, saveFoundFood, searchFoodsOnline, SOURCE_LABELS, type FoodCandidate } from '@/lib/food-search';
+import { searchFoodTables } from '@/lib/food-tables';
 import { errorMessage } from '@/lib/format';
 import { colors, radius, spacing, TAP_TARGET } from '@/lib/theme';
 import type { Food } from '@/lib/types';
@@ -39,11 +40,31 @@ export function FoodFinder({ foods, mealLabel, onPick, onNewFood, onEditFood, on
   const [scanning, setScanning] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [tables, setTables] = useState<{ query: string; results: FoodCandidate[] } | null>(null);
+
   const query = search.trim();
   const lower = query.toLowerCase();
   const matches = (foods ?? []).filter(
     (f) => f.name.toLowerCase().includes(lower) || (f.brand ?? '').toLowerCase().includes(lower),
   );
+
+  // The bundled food tables are searched as you type, after a short pause.
+  useEffect(() => {
+    if (query.length < 2) {
+      setTables(null);
+      return;
+    }
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      searchFoodTables(query).then((results) => {
+        if (!cancelled) setTables({ query, results });
+      });
+    }, 200);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [query]);
 
   async function runOnlineSearch() {
     if (query.length < 2) return;
@@ -88,8 +109,29 @@ export function FoodFinder({ foods, mealLabel, onPick, onNewFood, onEditFood, on
     }
   }
 
+  const candidateRow = (candidate: FoodCandidate) => (
+    <FoodRow
+      key={candidate.source + candidate.source_ref}
+      name={candidate.name}
+      brand={candidate.brand}
+      kcalPer100g={candidate.kcal_per_100g}
+      servingName={candidate.serving_name}
+      servingGrams={candidate.serving_grams}
+      sourceLabel={SOURCE_LABELS[candidate.source]}
+      busy={savingRef === candidate.source + candidate.source_ref}
+      onPress={() => pickCandidate(candidate)}
+    />
+  );
+
   const onlineFooter = (
     <View style={styles.online}>
+      {tables && tables.query === query && tables.results.length ? (
+        <>
+          <Text style={styles.sectionLabel}>Food tables · works offline</Text>
+          {tables.results.map(candidateRow)}
+        </>
+      ) : null}
+
       {query.length >= 2 && online?.query !== query ? (
         <Button label={`Search online for “${query}”`} onPress={runOnlineSearch} variant="secondary" />
       ) : null}
@@ -106,19 +148,7 @@ export function FoodFinder({ foods, mealLabel, onPick, onNewFood, onEditFood, on
           {!online.loading && online.results.length === 0 && online.errors.length === 0 ? (
             <Text style={styles.dim}>No results. Try a simpler name, like “oats” rather than “Tesco rolled oats 1kg”.</Text>
           ) : null}
-          {online.results.map((candidate) => (
-            <FoodRow
-              key={candidate.source + candidate.source_ref}
-              name={candidate.name}
-              brand={candidate.brand}
-              kcalPer100g={candidate.kcal_per_100g}
-              servingName={candidate.serving_name}
-              servingGrams={candidate.serving_grams}
-              sourceLabel={SOURCE_LABELS[candidate.source]}
-              busy={savingRef === candidate.source + candidate.source_ref}
-              onPress={() => pickCandidate(candidate)}
-            />
-          ))}
+          {online.results.map(candidateRow)}
           {online.results.length ? (
             <Text style={styles.dim}>Online values come from community and government databases. Check the label if something looks off.</Text>
           ) : null}

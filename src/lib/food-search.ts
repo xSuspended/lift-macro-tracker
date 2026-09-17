@@ -1,10 +1,11 @@
 import { createFood, getFood } from './food';
+import type { TableSource } from './food-tables';
 import { supabase } from './supabase';
 import type { Food } from './types';
 
 /** A food found online, not yet saved to your foods. Nutrition is per 100 g. */
 export type FoodCandidate = {
-  source: 'off' | 'usda';
+  source: 'off' | 'usda' | TableSource;
   source_ref: string;
   name: string;
   brand: string | null;
@@ -19,7 +20,21 @@ export type FoodCandidate = {
 export const SOURCE_LABELS: Record<FoodCandidate['source'], string> = {
   off: 'Open Food Facts',
   usda: 'USDA',
+  cofid: 'UK · CoFID',
+  cnf: 'Canada · Nutrient File',
+  afcd: 'Australia · AFCD',
+  ifct: 'India · IFCT',
 };
+
+/** Credit lines the food tables' licences ask for, shown in Settings. */
+export const DATA_CREDITS = [
+  'Open Food Facts — data under the Open Database License (ODbL).',
+  'USDA FoodData Central — public domain.',
+  'McCance and Widdowson’s Composition of Foods Integrated Dataset (UK) — contains public sector information licensed under the Open Government Licence v3.0.',
+  'Canadian Nutrient File, Health Canada — contains information licensed under the Open Government Licence – Canada.',
+  'Australian Food Composition Database Release 3 — © Food Standards Australia New Zealand.',
+  'Indian Food Composition Tables 2017 — ICMR-National Institute of Nutrition, Hyderabad.',
+];
 
 type SearchResponse = { results: FoodCandidate[]; errors: string[] };
 

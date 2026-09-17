@@ -4,6 +4,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Button } from '@/components/button';
 import { TargetsForm } from '@/components/targets-form';
 import { signOut, useAuth } from '@/lib/auth';
+import { DATA_CREDITS } from '@/lib/food-search';
 import { colors, radius, spacing } from '@/lib/theme';
 
 export default function Settings() {
@@ -28,6 +29,15 @@ export default function Settings() {
 
       <TargetsForm />
 
+      <View style={styles.card}>
+        <Text style={styles.cardLabel}>Food data sources</Text>
+        {DATA_CREDITS.map((line) => (
+          <Text key={line} style={styles.credit}>
+            {line}
+          </Text>
+        ))}
+      </View>
+
       <Button label="Sign out" onPress={handleSignOut} variant="danger" loading={busy} />
     </ScrollView>
   );
@@ -51,4 +61,5 @@ const styles = StyleSheet.create({
   },
   cardLabel: { color: colors.textDim, fontSize: 14, fontWeight: '600' },
   cardValue: { color: colors.text, fontSize: 18 },
+  credit: { color: colors.textDim, fontSize: 12, lineHeight: 17, marginTop: spacing.xs },
 });
