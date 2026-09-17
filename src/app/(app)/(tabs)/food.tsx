@@ -5,7 +5,6 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { AmountSheet } from '@/components/amount-sheet';
 import { Button } from '@/components/button';
-import { MacroChart } from '@/components/macro-chart';
 import { MacroTotals } from '@/components/macro-totals';
 import { MealSection } from '@/components/meal-section';
 import { NamePrompt } from '@/components/name-prompt';
@@ -27,8 +26,6 @@ import { errorMessage } from '@/lib/format';
 import { colors, radius, spacing, TAP_TARGET } from '@/lib/theme';
 import type { DayTotals, Food, FoodLog, Meal, Targets } from '@/lib/types';
 
-const CHART_DAYS = 7;
-
 type Loaded = { day: string; logs: FoodLog[]; totals: DayTotals[]; targets: Targets };
 type Editing = { log: FoodLog; food: Food };
 
@@ -45,7 +42,7 @@ export default function FoodTab() {
 
   const load = useCallback(() => {
     setError(null);
-    Promise.all([listFoodLogs(day), listDayTotals(addDays(day, -(CHART_DAYS - 1)), day), getTargets()])
+    Promise.all([listFoodLogs(day), listDayTotals(day, day), getTargets()])
       .then(([logs, totals, targets]) => setData({ day, logs, totals, targets }))
       .catch((e) => setError(errorMessage(e)));
   }, [day]);
@@ -99,7 +96,6 @@ export default function FoodTab() {
     [targets.target_kcal, targets.target_protein_g, targets.target_carbs_g, targets.target_fat_g].every(
       (t) => t !== null && t > 0,
     );
-  const chartDays = Array.from({ length: CHART_DAYS }, (_, i) => addDays(day, i - (CHART_DAYS - 1)));
 
   return (
     <>
@@ -130,26 +126,13 @@ export default function FoodTab() {
           </View>
         ) : null}
 
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Text style={styles.sectionLabel}>Last 7 days</Text>
-            <Text style={styles.dim}>% of daily target</Text>
-          </View>
-          {hasAllTargets && current ? (
-            <MacroChart
-              days={chartDays}
-              totals={current.totals}
-              targets={targets as { [K in keyof Targets]: number }}
-            />
-          ) : (
-            <View style={styles.noTargets}>
-              <Text style={styles.dim}>Set your calorie and macro targets to see how your days compare.</Text>
-              <Button label="Set targets" onPress={() => router.navigate('/settings')} variant="secondary" />
-            </View>
-          )}
-        </View>
-
         {targets ? <MacroTotals totals={dayTotals} targets={targets} /> : null}
+
+        {targets && !hasAllTargets ? (
+          <Pressable onPress={() => router.navigate('/settings')}>
+            <Text style={styles.hint}>Set your calorie and macro targets in Settings to track against them →</Text>
+          </Pressable>
+        ) : null}
 
         {current && logs.length === 0 ? (
           <Button
@@ -226,22 +209,5 @@ const styles = StyleSheet.create({
   disabled: { opacity: 0.35 },
   errorBox: { gap: spacing.md },
   error: { color: colors.danger, fontSize: 15 },
-  card: {
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    padding: spacing.lg,
-    gap: spacing.md,
-  },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
-  sectionLabel: {
-    color: colors.textDim,
-    fontSize: 13,
-    fontWeight: '700',
-    letterSpacing: 0.4,
-    textTransform: 'uppercase',
-  },
-  dim: { color: colors.textDim, fontSize: 13, lineHeight: 19 },
-  noTargets: { gap: spacing.md },
+  hint: { color: colors.accent, fontSize: 14, lineHeight: 20, paddingVertical: spacing.xs },
 });

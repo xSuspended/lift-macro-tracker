@@ -75,8 +75,9 @@ prefer boring, well-documented tools over clever ones.
    Progress tab charts with week/month/year change. Which routine a workout
    was started from is stored on the device (`src/lib/plans.ts`), not in the
    database.
-4. **Food logging** — done. Food tab (day navigation, 7-day % of target chart,
-   totals vs targets, meals), add food (your foods / saved meals / quick add),
+4. **Food logging** — done. Food tab (day navigation, calorie ring split by
+   macro with totals vs targets, meals); the % of target line chart lives on
+   the Progress tab with Day / Week / Month; add food (your foods / saved meals / quick add),
    food editor, amount picker in servings or grams, saved meals, copy the
    previous day, targets in Settings.
 5. Food search: Open Food Facts (and USDA FoodData Central if a key is added);
