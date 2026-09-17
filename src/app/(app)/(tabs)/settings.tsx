@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { ExportData } from '@/components/export-data';
 import { TargetsForm } from '@/components/targets-form';
 import { UnitSetting } from '@/components/unit-setting';
 import { signOut, useAuth } from '@/lib/auth';
@@ -31,6 +32,8 @@ export default function Settings() {
       <TargetsForm />
 
       <UnitSetting />
+
+      <ExportData />
 
       <View style={styles.card}>
         <Text style={styles.cardLabel}>Food data sources</Text>

@@ -40,7 +40,8 @@
           "cameraPermission": "Allow $(PRODUCT_NAME) to use the camera to scan food barcodes.",
           "recordAudioAndroid": false
         }
-      ]
+      ],
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true,
