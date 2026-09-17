@@ -75,7 +75,11 @@ export function MacroTotals({ totals, targets }: Props) {
               <Text style={styles.macroKcal}>
                 {fmt(m.kcal)} kcal{macroKcal > 0 ? ` · ${Math.round((m.kcal / macroKcal) * 100)}% of calories` : ''}
               </Text>
-              <Bar value={m.grams} target={m.targetGrams} color={m.color} />
+              <Bar
+                value={m.grams}
+                target={m.targetGrams}
+                color={m.targetGrams && m.grams > m.targetGrams ? colors.danger : m.color}
+              />
             </View>
           ))}
         </View>
@@ -106,7 +110,7 @@ const styles = StyleSheet.create({
   macroName: { flex: 1, color: colors.text, fontSize: 13, fontWeight: '600' },
   grams: { color: colors.text, fontSize: 12, fontWeight: '600' },
   percent: { minWidth: 32, textAlign: 'right', color: colors.textDim, fontSize: 12, fontWeight: '600' },
-  percentOver: { color: colors.warning },
+  percentOver: { color: colors.danger },
   macroKcal: { color: colors.textDim, fontSize: 11, marginLeft: 14 },
   track: { height: 5, borderRadius: 3, backgroundColor: colors.bg, overflow: 'hidden', marginLeft: 14, marginTop: 2 },
   fill: { height: 5, borderRadius: 3 },

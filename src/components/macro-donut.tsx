@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Platform, StyleSheet, Text, View, type GestureResponderEvent } from 'react-native';
-import Svg, { Circle } from 'react-native-svg';
+import Svg, { Circle, G } from 'react-native-svg';
 
 import { colors, macroColors } from '@/lib/theme';
 
@@ -48,6 +48,7 @@ export function MacroDonut({ kcal, targetKcal, parts, size = 140 }: Props) {
   const rotate = `rotate(-90 ${centre} ${centre})`;
 
   const eatenShare = targetKcal ? Math.min(1, kcal / targetKcal) : 0;
+  const kcalOver = !!targetKcal && kcal > targetKcal;
 
   const filled = parts.filter((p) => p.kcal > 0);
   const macroTotal = filled.reduce((sum, p) => sum + p.kcal, 0);
@@ -56,7 +57,11 @@ export function MacroDonut({ kcal, targetKcal, parts, size = 140 }: Props) {
     const length = (part.kcal / macroTotal) * innerC;
     // Leave a small gap between slices, unless a slice is the whole ring.
     const drawn = filled.length > 1 ? Math.max(0, length - SLICE_GAP) : length;
-    const arc = { ...part, drawn, offset, length };
+    // Each slice fills with progress toward that macro's own target, like the
+    // calorie ring does. Without a target the slice is shown full.
+    const progress = part.targetGrams ? Math.min(1, part.grams / part.targetGrams) : 1;
+    const over = !!part.targetGrams && part.grams > part.targetGrams;
+    const arc = { ...part, drawn, fill: drawn * progress, over, offset, length };
     offset += length;
     return arc;
   });
@@ -120,7 +125,7 @@ export function MacroDonut({ kcal, targetKcal, parts, size = 140 }: Props) {
                 cx={centre}
                 cy={centre}
                 r={outerR}
-                stroke={macroColors.kcal}
+                stroke={kcalOver ? colors.danger : macroColors.kcal}
                 strokeWidth={active === 'kcal' ? OUTER_STROKE + 2 : OUTER_STROKE}
                 strokeOpacity={active && active !== 'kcal' ? 0.35 : 1}
                 strokeLinecap={eatenShare < 1 ? 'round' : 'butt'}
@@ -133,21 +138,34 @@ export function MacroDonut({ kcal, targetKcal, parts, size = 140 }: Props) {
         ) : null}
 
         <Circle cx={centre} cy={centre} r={innerR} stroke={colors.bg} strokeWidth={INNER_STROKE} fill="none" />
-        {arcs.map((arc) => (
-          <Circle
-            key={arc.key}
-            cx={centre}
-            cy={centre}
-            r={innerR}
-            stroke={arc.color}
-            strokeWidth={active === arc.key ? INNER_STROKE + 4 : INNER_STROKE}
-            strokeOpacity={active && active !== arc.key ? 0.35 : 1}
-            fill="none"
-            strokeDasharray={`${arc.drawn} ${innerC - arc.drawn}`}
-            strokeDashoffset={-arc.offset}
-            transform={rotate}
-          />
-        ))}
+        {arcs.map((arc) => {
+          const width = active === arc.key ? INNER_STROKE + 4 : INNER_STROKE;
+          const opacity = active && active !== arc.key ? 0.35 : 1;
+          const span = (length: number, strokeWidth: number, stroke: string) => (
+            <Circle
+              cx={centre}
+              cy={centre}
+              r={innerR}
+              stroke={stroke}
+              strokeWidth={strokeWidth}
+              strokeOpacity={opacity}
+              fill="none"
+              strokeDasharray={`${length} ${innerC - length}`}
+              strokeDashoffset={-arc.offset}
+              transform={rotate}
+            />
+          );
+          return (
+            <G key={arc.key}>
+              {/* Over target: a red outline, with a dark hairline so it still reads against the red fat slice. */}
+              {arc.over ? span(arc.drawn, width + 7, colors.danger) : null}
+              {arc.over ? span(arc.drawn, width + 2, colors.card) : null}
+              {/* The whole slice in grey, then the part of the target eaten in colour. */}
+              {span(arc.drawn, width, colors.border)}
+              {arc.fill > 0 ? span(arc.fill, width, arc.color) : null}
+            </G>
+          );
+        })}
       </Svg>
 
       <View style={styles.centre} pointerEvents="none">
