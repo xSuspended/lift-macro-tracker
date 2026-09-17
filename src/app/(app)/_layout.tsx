@@ -23,6 +23,8 @@ export default function AppLayout() {
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="session/[id]" options={{ headerShown: true, title: 'Workout' }} />
       <Stack.Screen name="routine/[id]" options={{ headerShown: true, title: 'Routine' }} />
+      <Stack.Screen name="food/add" options={{ headerShown: true, title: 'Add food' }} />
+      <Stack.Screen name="food/edit" options={{ headerShown: true, title: 'Food' }} />
     </Stack>
   );
 }

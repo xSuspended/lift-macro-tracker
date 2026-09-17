@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { TargetsForm } from '@/components/targets-form';
 import { signOut, useAuth } from '@/lib/auth';
 import { colors, radius, spacing } from '@/lib/theme';
 
@@ -25,9 +26,7 @@ export default function Settings() {
         <Text style={styles.cardValue}>{session?.user.email ?? 'Unknown'}</Text>
       </View>
 
-      <Text style={styles.note}>
-        Macro targets, weight units, and body weight settings arrive in later phases.
-      </Text>
+      <TargetsForm />
 
       <Button label="Sign out" onPress={handleSignOut} variant="danger" loading={busy} />
     </ScrollView>
@@ -52,5 +51,4 @@ const styles = StyleSheet.create({
   },
   cardLabel: { color: colors.textDim, fontSize: 14, fontWeight: '600' },
   cardValue: { color: colors.text, fontSize: 18 },
-  note: { color: colors.textDim, fontSize: 15, lineHeight: 21 },
 });

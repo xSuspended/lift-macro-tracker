@@ -43,6 +43,12 @@ prefer boring, well-documented tools over clever ones.
   signed-in check. Put new logged-in screens there, not at the top level.
 - The owner wants things kept simple: one double-progression rule with defaults,
   no alternative training schemes or elaborate settings.
+- React Compiler is on. Don't use non-null assertions on nullable state inside
+  inline callbacks (`picked!.id`): the compiler reads them while rendering and
+  crashes when the value is null. Guard with `if (!picked) return;` instead.
+- Food days are local "YYYY-MM-DD" keys from `src/lib/dates.ts`; always send
+  `logged_on` rather than relying on the database's UTC `current_date`.
+- Batch inserts through supabase-js need every row to have the same keys.
 - `app.json` uses `web.output: "single"`. Do not switch it back to `"static"`:
   static output pre-renders in Node, where `window` is undefined and
   AsyncStorage-backed Supabase sessions crash the build.
@@ -69,9 +75,10 @@ prefer boring, well-documented tools over clever ones.
    Progress tab charts with week/month/year change. Which routine a workout
    was started from is stored on the device (`src/lib/plans.ts`), not in the
    database.
-4. Food logging: daily view grouped by meal with totals vs targets (from
-   `daily_nutrition`), macro targets in Settings, custom foods with per-100g
-   values and optional serving, quick add, saved meals, "copy yesterday".
+4. **Food logging** — done. Food tab (day navigation, 7-day % of target chart,
+   totals vs targets, meals), add food (your foods / saved meals / quick add),
+   food editor, amount picker in servings or grams, saved meals, copy the
+   previous day, targets in Settings.
 5. Food search: Open Food Facts (and USDA FoodData Central if a key is added);
    cache logged results into `foods` with `source` and `source_ref`. Barcode
    scanning on Android only if simple; hide it on web.
