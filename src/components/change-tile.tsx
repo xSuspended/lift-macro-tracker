@@ -4,10 +4,18 @@ import { StyleSheet, Text, View } from 'react-native';
 import type { Change } from '@/lib/progress';
 import { colors, radius, spacing } from '@/lib/theme';
 
+type Props = {
+  label: string;
+  change: Change | null;
+  unit: string;
+  /** Show up and down in plain text colour, for things where neither is "good" (like body weight). */
+  neutral?: boolean;
+};
+
 /** "Week  ↑ 2.3%  +1.8 kg" — or a dash when there isn't enough history yet. */
-export function ChangeTile({ label, change, unit }: { label: string; change: Change | null; unit: string }) {
+export function ChangeTile({ label, change, unit, neutral }: Props) {
   const up = change !== null && change.delta >= 0;
-  const tint = change === null ? colors.textDim : up ? colors.success : colors.danger;
+  const tint = change === null ? colors.textDim : neutral ? colors.text : up ? colors.success : colors.danger;
 
   return (
     <View style={styles.tile}>

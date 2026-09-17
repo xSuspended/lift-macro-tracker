@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { formatNumber } from '@/lib/format';
 import { colors, radius, spacing } from '@/lib/theme';
+import { formatWeight, useUnits } from '@/lib/units';
 
 type Props = {
   /** "1", "2"... for working sets, "W" for warm-ups. */
@@ -15,11 +16,12 @@ type Props = {
 };
 
 export function SetRow({ label, weightKg, reps, rpe, isWarmup, onDelete }: Props) {
+  const { unit } = useUnits();
   return (
     <View style={[styles.row, !onDelete && styles.rowReadOnly]}>
       <Text style={[styles.label, isWarmup && styles.warmup]}>{label}</Text>
       <Text style={[styles.main, isWarmup && styles.dim]}>
-        {formatNumber(weightKg)} kg × {reps}
+        {formatWeight(weightKg, unit)} × {reps}
       </Text>
       {rpe !== null ? <Text style={styles.rpe}>RPE {formatNumber(rpe)}</Text> : null}
       {onDelete ? (

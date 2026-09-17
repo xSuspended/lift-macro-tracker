@@ -8,11 +8,12 @@ import { ExercisePicker } from '@/components/exercise-picker';
 import { LastTime } from '@/components/last-time';
 import { SetEntry, type SetValues } from '@/components/set-entry';
 import { confirm } from '@/lib/confirm';
-import { errorMessage, formatNumber, formatTime } from '@/lib/format';
+import { errorMessage, formatTime } from '@/lib/format';
 import { forgetRoutine, getRememberedRoutineId } from '@/lib/plans';
 import { DEFAULT_TARGET, suggestNext } from '@/lib/progression';
 import { getRoutine } from '@/lib/routines';
 import { colors, spacing } from '@/lib/theme';
+import { formatWeight, toKg, useUnits } from '@/lib/units';
 import type { Exercise, LoggedSet, Routine, RoutineExercise, WorkoutDetail } from '@/lib/types';
 import {
   addSet,
@@ -25,8 +26,9 @@ import {
   type LastSession,
 } from '@/lib/workouts';
 
-// Starting values for an exercise you've never logged before.
-const DEFAULT_WEIGHT_KG = 20;
+// Starting values for an exercise you've never logged before: an empty
+// barbell, 20 kg or 45 lb.
+const DEFAULT_WEIGHT_KG = { kg: 20, lb: toKg(45, 'lb') };
 const DEFAULT_REPS = 10;
 
 type Props = {
@@ -38,6 +40,7 @@ type Props = {
 type Row = ExerciseGroup & { plan?: RoutineExercise };
 
 export function ActiveWorkout({ workout, onFinished, onDeleted }: Props) {
+  const { unit } = useUnits();
   const [sets, setSets] = useState<LoggedSet[]>(workout.sets);
   const [routine, setRoutine] = useState<Routine | null>(null);
   // Exercises added during the workout that have no sets saved yet.
@@ -103,7 +106,7 @@ export function ActiveWorkout({ workout, onFinished, onDeleted }: Props) {
   const selected = rows.find((r) => r.exerciseId === selectedId) ?? null;
   const lastSession = selected ? lastSessions[selected.exerciseId] : undefined;
   const suggestion =
-    selected && lastSession ? suggestNext(lastSession.sets, selected.plan ?? DEFAULT_TARGET) : null;
+    selected && lastSession ? suggestNext(lastSession.sets, selected.plan ?? DEFAULT_TARGET, unit) : null;
   const lastSetToday = selected?.sets[selected.sets.length - 1];
 
   function handlePick(exercise: Exercise) {
@@ -131,7 +134,7 @@ export function ActiveWorkout({ workout, onFinished, onDeleted }: Props) {
   async function handleDeleteSet(set: LoggedSet) {
     const ok = await confirm(
       'Delete this set?',
-      `${set.exercise_name}: ${formatNumber(set.weight_kg)} kg × ${set.reps}`,
+      `${set.exercise_name}: ${formatWeight(set.weight_kg, unit)} × ${set.reps}`,
       'Delete',
     );
     if (!ok) return;
@@ -218,9 +221,9 @@ export function ActiveWorkout({ workout, onFinished, onDeleted }: Props) {
       {selected && lastSession !== undefined ? (
         <SetEntry
           // A new key resets the steppers when you switch exercise.
-          key={selected.exerciseId}
+          key={`${selected.exerciseId}-${unit}`}
           exerciseName={selected.name}
-          initialWeightKg={lastSetToday?.weight_kg ?? suggestion?.weightKg ?? DEFAULT_WEIGHT_KG}
+          initialWeightKg={lastSetToday?.weight_kg ?? suggestion?.weightKg ?? DEFAULT_WEIGHT_KG[unit]}
           initialReps={lastSetToday?.reps ?? suggestion?.reps ?? DEFAULT_REPS}
           onAdd={handleAddSet}>
           <LastTime session={lastSession} suggestion={suggestion} />

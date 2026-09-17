@@ -22,25 +22,29 @@ export function parseDateOnly(value: string) {
 export type Change = { percent: number; delta: number };
 
 /**
- * How much `metric` changed over the last `days` days: your latest session
- * compared with your last session from before that window. If every session
- * falls inside the window, it compares against your first one.
+ * How much a value changed over the last `days` days: the latest entry compared
+ * with the last entry from before that window. If every entry falls inside the
+ * window, it compares against the first one. `series` is oldest first.
  */
-export function changeOver(points: ProgressPoint[], metric: Metric, days: number): Change | null {
-  if (points.length < 2) return null;
+export function changeOverSeries(series: { day: string; value: number }[], days: number): Change | null {
+  if (series.length < 2) return null;
 
   const cutoff = new Date();
   cutoff.setHours(0, 0, 0, 0);
   cutoff.setDate(cutoff.getDate() - days);
 
-  let baseline = points[0];
-  for (const point of points) {
-    if (parseDateOnly(point.workout_date) <= cutoff) baseline = point;
+  let baseline = series[0];
+  for (const point of series) {
+    if (parseDateOnly(point.day) <= cutoff) baseline = point;
   }
 
-  const latest = points[points.length - 1];
-  if (baseline === latest || baseline[metric] === 0) return null;
+  const latest = series[series.length - 1];
+  if (baseline === latest || baseline.value === 0) return null;
 
-  const delta = latest[metric] - baseline[metric];
-  return { delta, percent: (delta / baseline[metric]) * 100 };
+  const delta = latest.value - baseline.value;
+  return { delta, percent: (delta / baseline.value) * 100 };
+}
+
+export function changeOver(points: ProgressPoint[], metric: Metric, days: number) {
+  return changeOverSeries(points.map((p) => ({ day: p.workout_date, value: p[metric] })), days);
 }

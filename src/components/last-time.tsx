@@ -4,6 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { formatDay, formatNumber } from '@/lib/format';
 import type { Suggestion } from '@/lib/progression';
 import { colors, radius, spacing } from '@/lib/theme';
+import { toDisplay, useUnits } from '@/lib/units';
 import type { LastSession } from '@/lib/workouts';
 
 type Props = {
@@ -12,6 +13,7 @@ type Props = {
 };
 
 export function LastTime({ session, suggestion }: Props) {
+  const { unit } = useUnits();
   if (!session) {
     return <Text style={styles.none}>First time logging this exercise.</Text>;
   }
@@ -28,7 +30,7 @@ export function LastTime({ session, suggestion }: Props) {
       <View style={styles.chips}>
         {working.map((set) => (
           <Text key={set.id} style={styles.chip}>
-            {formatNumber(set.weight_kg)} × {set.reps}
+            {formatNumber(toDisplay(set.weight_kg, unit))} × {set.reps}
           </Text>
         ))}
       </View>

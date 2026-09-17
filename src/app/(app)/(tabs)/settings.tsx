@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { TargetsForm } from '@/components/targets-form';
+import { UnitSetting } from '@/components/unit-setting';
 import { signOut, useAuth } from '@/lib/auth';
 import { DATA_CREDITS } from '@/lib/food-search';
 import { colors, radius, spacing } from '@/lib/theme';
@@ -28,6 +29,8 @@ export default function Settings() {
       </View>
 
       <TargetsForm />
+
+      <UnitSetting />
 
       <View style={styles.card}>
         <Text style={styles.cardLabel}>Food data sources</Text>

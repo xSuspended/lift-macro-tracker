@@ -6,6 +6,7 @@ import { Button } from '@/components/button';
 import { Stepper } from '@/components/stepper';
 import { errorMessage, formatNumber } from '@/lib/format';
 import { colors, radius, spacing } from '@/lib/theme';
+import { LIFT_STEP, toDisplay, toKg, useUnits } from '@/lib/units';
 
 export type SetValues = {
   weightKg: number;
@@ -28,7 +29,9 @@ const RPE_MAX = 10;
 
 /** The dock pinned to the bottom of the workout screen for logging the next set. */
 export function SetEntry({ exerciseName, initialWeightKg, initialReps, onAdd, children }: Props) {
-  const [weightKg, setWeightKg] = useState(initialWeightKg);
+  const { unit } = useUnits();
+  // The stepper works in your unit; the weight is turned back into kg when saved.
+  const [weight, setWeight] = useState(toDisplay(initialWeightKg, unit));
   const [reps, setReps] = useState(initialReps);
   const [rpe, setRpe] = useState<number | null>(null);
   const [isWarmup, setIsWarmup] = useState(false);
@@ -49,7 +52,7 @@ export function SetEntry({ exerciseName, initialWeightKg, initialReps, onAdd, ch
     setError(null);
     setBusy(true);
     try {
-      await onAdd({ weightKg, reps, rpe, isWarmup });
+      await onAdd({ weightKg: toKg(weight, unit), reps, rpe, isWarmup });
     } catch (e) {
       setError(errorMessage(e));
     } finally {
@@ -66,7 +69,7 @@ export function SetEntry({ exerciseName, initialWeightKg, initialReps, onAdd, ch
       {children}
 
       <View style={styles.row}>
-        <Stepper label="Weight (kg)" value={weightKg} onChange={setWeightKg} step={2.5} allowDecimal />
+        <Stepper label={`Weight (${unit})`} value={weight} onChange={setWeight} step={LIFT_STEP[unit]} allowDecimal />
         <Stepper label="Reps" value={reps} onChange={setReps} step={1} max={999} />
       </View>
 

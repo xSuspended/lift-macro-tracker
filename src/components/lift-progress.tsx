@@ -9,9 +9,10 @@ import { LineChart } from '@/components/line-chart';
 import { Segmented } from '@/components/segmented';
 import { SelectModal } from '@/components/select-modal';
 import { errorMessage, formatNumber } from '@/lib/format';
-import { changeOver, listProgress, parseDateOnly, type Metric } from '@/lib/progress';
+import { changeOver, listProgress, parseDateOnly, type Change, type Metric } from '@/lib/progress';
 import { colors, radius, spacing, TAP_TARGET } from '@/lib/theme';
 import type { ProgressPoint } from '@/lib/types';
+import { formatWeight, toDisplay, useUnits } from '@/lib/units';
 
 const METRICS: { key: Metric; label: string; title: string }[] = [
   { key: 'est_1rm_kg', label: 'Est. 1RM', title: 'Estimated 1RM' },
@@ -34,6 +35,9 @@ export function LiftProgress() {
   const [metric, setMetric] = useState<Metric>('est_1rm_kg');
   const [pickerOpen, setPickerOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { unit } = useUnits();
+  // Percent change is the same in any unit; only the amount needs converting.
+  const inUnit = (change: Change | null) => (change ? { ...change, delta: toDisplay(change.delta, unit) } : null);
 
   const load = useCallback(() => {
     setError(null);
@@ -65,6 +69,7 @@ export function LiftProgress() {
   const series = points.filter((p) => p.exercise_id === current.exercise_id);
   const latest = series[series.length - 1];
   const metricInfo = METRICS.find((m) => m.key === metric)!;
+  const show = (kg: number) => toDisplay(kg, unit);
 
   return (
     <View style={styles.gap}>
@@ -83,21 +88,21 @@ export function LiftProgress() {
           <View>
             <Text style={styles.label}>{metricInfo.title}</Text>
             <Text style={styles.bigValue}>
-              {formatNumber(latest[metric])} <Text style={styles.unit}>kg</Text>
+              {formatNumber(show(latest[metric]))} <Text style={styles.unit}>{unit}</Text>
             </Text>
           </View>
           <Text style={styles.dim}>
             {series.length} {series.length === 1 ? 'session' : 'sessions'}
           </Text>
         </View>
-        <LineChart unit="kg" points={series.map((p) => ({ label: shortDate(p.workout_date), value: p[metric] }))} />
+        <LineChart unit={unit} points={series.map((p) => ({ label: shortDate(p.workout_date), value: show(p[metric]) }))} />
       </View>
 
       <View style={styles.section}>
         <Text style={styles.label}>Change</Text>
         <View style={styles.tiles}>
           {PERIODS.map((period) => (
-            <ChangeTile key={period.label} label={period.label} change={changeOver(series, metric, period.days)} unit="kg" />
+            <ChangeTile key={period.label} label={period.label} change={inUnit(changeOver(series, metric, period.days))} unit={unit} />
           ))}
         </View>
       </View>
@@ -112,10 +117,10 @@ export function LiftProgress() {
               <View style={styles.sessionText}>
                 <Text style={styles.sessionDay}>{shortDate(p.workout_date)}</Text>
                 <Text style={styles.dim}>
-                  {p.set_count} {p.set_count === 1 ? 'set' : 'sets'} · top {formatNumber(p.top_weight_kg)} kg
+                  {p.set_count} {p.set_count === 1 ? 'set' : 'sets'} · top {formatWeight(p.top_weight_kg, unit)}
                 </Text>
               </View>
-              <Text style={styles.sessionValue}>{formatNumber(p[metric])}</Text>
+              <Text style={styles.sessionValue}>{formatNumber(show(p[metric]))}</Text>
             </View>
           ))}
       </View>
