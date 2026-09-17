@@ -1,10 +1,12 @@
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { ExerciseCard } from '@/components/exercise-card';
 import { confirm } from '@/lib/confirm';
-import { errorMessage, formatMinutes, formatTime } from '@/lib/format';
+import { errorMessage, formatDay, formatMinutes, formatTime } from '@/lib/format';
+import { createRoutineFromWorkout } from '@/lib/routines';
 import { colors, radius, spacing } from '@/lib/theme';
 import type { WorkoutDetail } from '@/lib/types';
 import { deleteWorkout, groupByExercise } from '@/lib/workouts';
@@ -17,10 +19,24 @@ type Props = {
 /** A finished workout, read-only. */
 export function WorkoutSummary({ workout, onDeleted }: Props) {
   const [deleting, setDeleting] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const groups = groupByExercise(workout.sets);
   const workingCount = workout.sets.filter((s) => !s.is_warmup).length;
+
+  async function handleSaveAsRoutine() {
+    setError(null);
+    setSaving(true);
+    try {
+      const id = await createRoutineFromWorkout(`${formatDay(workout.started_at)} routine`, workout);
+      router.push({ pathname: '/routine/[id]', params: { id } });
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setSaving(false);
+    }
+  }
 
   async function handleDelete() {
     const ok = await confirm('Delete this workout?', 'All of its sets will be deleted too.', 'Delete');
@@ -51,6 +67,10 @@ export function WorkoutSummary({ workout, onDeleted }: Props) {
       ))}
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
+
+      {workout.sets.length > 0 ? (
+        <Button label="Save as routine" onPress={handleSaveAsRoutine} variant="secondary" loading={saving} />
+      ) : null}
 
       <View style={styles.danger}>
         <Button label="Delete workout" onPress={handleDelete} variant="danger" loading={deleting} />

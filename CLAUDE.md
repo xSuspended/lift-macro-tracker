@@ -64,10 +64,11 @@ prefer boring, well-documented tools over clever ones.
 
 1. **Setup + auth** — done.
 2. **Workout logging** — done.
-3. Progression: "last time" while logging; routines with target sets and rep
-   range; double progression (all working sets hit `rep_max` last time →
-   suggest `+increment_kg`, otherwise same weight and aim for more reps);
-   Progress tab charts for est. 1RM, top weight, and volume.
+3. **Progression** — done. Routines (made by hand or saved from a finished
+   workout), "last time" + double-progression suggestion while logging, and
+   Progress tab charts with week/month/year change. Which routine a workout
+   was started from is stored on the device (`src/lib/plans.ts`), not in the
+   database.
 4. Food logging: daily view grouped by meal with totals vs targets (from
    `daily_nutrition`), macro targets in Settings, custom foods with per-100g
    values and optional serving, quick add, saved meals, "copy yesterday".

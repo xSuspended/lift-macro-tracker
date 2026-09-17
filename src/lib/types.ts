@@ -31,6 +31,36 @@ export type LoggedSet = WorkoutSet & { exercise_name: string };
 
 export type WorkoutDetail = Workout & { sets: LoggedSet[] };
 
+export type RoutineExercise = {
+  id: string;
+  exercise_id: string;
+  exercise_name: string;
+  position: number;
+  target_sets: number;
+  rep_min: number;
+  rep_max: number;
+  increment_kg: number;
+};
+
+export type Routine = {
+  id: string;
+  name: string;
+  exercises: RoutineExercise[];
+};
+
+/** One row of the `exercise_progress` view: an exercise's numbers for one workout. */
+export type ProgressPoint = {
+  exercise_id: string;
+  exercise_name: string;
+  workout_id: string;
+  /** "YYYY-MM-DD" */
+  workout_date: string;
+  set_count: number;
+  top_weight_kg: number;
+  volume_kg: number;
+  est_1rm_kg: number;
+};
+
 export type WorkoutHistoryItem = {
   id: string;
   started_at: string;

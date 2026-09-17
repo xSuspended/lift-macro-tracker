@@ -112,7 +112,32 @@ export async function deleteSet(id: string) {
   if (error) throw error;
 }
 
-export type ExerciseGroup = { exerciseId: string; name: string; sets: LoggedSet[] };
+export type LastSession = { startedAt: string; sets: WorkoutSet[] };
+
+/** Your sets for an exercise from the most recent finished workout, other than `excludeWorkoutId`. */
+export async function getLastSession(exerciseId: string, excludeWorkoutId: string): Promise<LastSession | null> {
+  const { data, error } = await supabase
+    .from('workout_sets')
+    .select(`${SET_COLUMNS}, workouts!inner(started_at, finished_at)`)
+    .eq('exercise_id', exerciseId)
+    .neq('workout_id', excludeWorkoutId)
+    .not('workouts.finished_at', 'is', null)
+    .order('created_at', { ascending: false })
+    .limit(40);
+  if (error) throw error;
+
+  const rows = data as unknown as (WorkoutSet & { workouts: { started_at: string } })[];
+  if (rows.length === 0) return null;
+
+  const latest = rows[0];
+  const sets = rows
+    .filter((r) => r.workout_id === latest.workout_id)
+    .map(({ workouts, ...set }) => set)
+    .reverse();
+  return { startedAt: latest.workouts.started_at, sets };
+}
+
+export type ExerciseGroup ={ exerciseId: string; name: string; sets: LoggedSet[] };
 
 /** Groups sets by exercise, in the order each exercise was first logged. */
 export function groupByExercise(sets: LoggedSet[]): ExerciseGroup[] {

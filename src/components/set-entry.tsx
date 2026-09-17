@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { Button } from '@/components/button';
@@ -19,13 +19,15 @@ type Props = {
   initialWeightKg: number;
   initialReps: number;
   onAdd: (values: SetValues) => Promise<void>;
+  /** Shown between the exercise name and the steppers. */
+  children?: ReactNode;
 };
 
 const RPE_MIN = 6;
 const RPE_MAX = 10;
 
 /** The dock pinned to the bottom of the workout screen for logging the next set. */
-export function SetEntry({ exerciseName, initialWeightKg, initialReps, onAdd }: Props) {
+export function SetEntry({ exerciseName, initialWeightKg, initialReps, onAdd, children }: Props) {
   const [weightKg, setWeightKg] = useState(initialWeightKg);
   const [reps, setReps] = useState(initialReps);
   const [rpe, setRpe] = useState<number | null>(null);
@@ -60,6 +62,8 @@ export function SetEntry({ exerciseName, initialWeightKg, initialReps, onAdd }: 
       <Text style={styles.exercise} numberOfLines={1}>
         {exerciseName}
       </Text>
+
+      {children}
 
       <View style={styles.row}>
         <Stepper label="Weight (kg)" value={weightKg} onChange={setWeightKg} step={2.5} allowDecimal />
@@ -116,14 +120,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderTopWidth: 1,
     borderTopColor: colors.border,
-    padding: spacing.lg,
-    gap: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    gap: spacing.sm + 2,
   },
   exercise: { color: colors.text, fontSize: 15, fontWeight: '600' },
   row: { flexDirection: 'row', gap: spacing.md },
   small: {
     flex: 1,
-    minHeight: 48,
+    minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',

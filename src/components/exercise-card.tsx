@@ -7,14 +7,17 @@ import type { ExerciseGroup } from '@/lib/workouts';
 
 type Props = {
   group: ExerciseGroup;
+  /** From the routine this workout was started with, if any. */
+  targetSets?: number;
   selected?: boolean;
   onSelect?: () => void;
   onDeleteSet?: (set: LoggedSet) => void;
 };
 
 /** One exercise and its sets. Tappable while logging, read-only in history. */
-export function ExerciseCard({ group, selected, onSelect, onDeleteSet }: Props) {
+export function ExerciseCard({ group, targetSets, selected, onSelect, onDeleteSet }: Props) {
   const workingCount = group.sets.filter((s) => !s.is_warmup).length;
+  const done = targetSets !== undefined && workingCount >= targetSets;
   let workingNumber = 0;
 
   return (
@@ -26,8 +29,12 @@ export function ExerciseCard({ group, selected, onSelect, onDeleteSet }: Props) 
         <Text style={styles.name} numberOfLines={1}>
           {group.name}
         </Text>
-        <Text style={styles.count}>
-          {workingCount === 1 ? '1 set' : `${workingCount} sets`}
+        <Text style={[styles.count, done && styles.done]}>
+          {targetSets !== undefined
+            ? `${workingCount} / ${targetSets} sets`
+            : workingCount === 1
+              ? '1 set'
+              : `${workingCount} sets`}
         </Text>
       </View>
 
@@ -75,6 +82,7 @@ const styles = StyleSheet.create({
   },
   name: { flex: 1, color: colors.text, fontSize: 17, fontWeight: '600' },
   count: { color: colors.textDim, fontSize: 13 },
+  done: { color: colors.success, fontWeight: '600' },
   empty: { color: colors.textDim, fontSize: 14, paddingHorizontal: spacing.xs, paddingBottom: spacing.xs },
   sets: { gap: spacing.xs },
 });

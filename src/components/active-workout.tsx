@@ -1,25 +1,31 @@
-import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { Elapsed } from '@/components/elapsed';
 import { ExerciseCard } from '@/components/exercise-card';
 import { ExercisePicker } from '@/components/exercise-picker';
+import { LastTime } from '@/components/last-time';
 import { SetEntry, type SetValues } from '@/components/set-entry';
 import { confirm } from '@/lib/confirm';
 import { errorMessage, formatNumber, formatTime } from '@/lib/format';
+import { forgetRoutine, getRememberedRoutineId } from '@/lib/plans';
+import { DEFAULT_TARGET, suggestNext } from '@/lib/progression';
+import { getRoutine } from '@/lib/routines';
 import { colors, spacing } from '@/lib/theme';
-import type { Exercise, LoggedSet, WorkoutDetail } from '@/lib/types';
+import type { Exercise, LoggedSet, Routine, RoutineExercise, WorkoutDetail } from '@/lib/types';
 import {
   addSet,
   deleteSet,
   deleteWorkout,
   finishWorkout,
+  getLastSession,
   groupByExercise,
   type ExerciseGroup,
+  type LastSession,
 } from '@/lib/workouts';
 
-// Starting values for an exercise's first set in this workout.
+// Starting values for an exercise you've never logged before.
 const DEFAULT_WEIGHT_KG = 20;
 const DEFAULT_REPS = 10;
 
@@ -29,31 +35,80 @@ type Props = {
   onDeleted: () => void;
 };
 
+type Row = ExerciseGroup & { plan?: RoutineExercise };
+
 export function ActiveWorkout({ workout, onFinished, onDeleted }: Props) {
   const [sets, setSets] = useState<LoggedSet[]>(workout.sets);
-  // Exercises added to the workout that have no sets saved yet. The database
-  // only knows an exercise is in a workout once a set exists.
+  const [routine, setRoutine] = useState<Routine | null>(null);
+  // Exercises added during the workout that have no sets saved yet.
   const [added, setAdded] = useState<Pick<Exercise, 'id' | 'name'>[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(
     workout.sets.length ? workout.sets[workout.sets.length - 1].exercise_id : null,
   );
+  // Previous session per exercise id; a missing key means not loaded yet.
+  const [lastSessions, setLastSessions] = useState<Record<string, LastSession | null>>({});
   const [pickerOpen, setPickerOpen] = useState(false);
   const [finishing, setFinishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    getRememberedRoutineId(workout.id)
+      .then((routineId) => (routineId ? getRoutine(routineId) : null))
+      .then((found) => {
+        if (!found) return;
+        setRoutine(found);
+        // Jump to the first routine exercise that still needs sets.
+        const next =
+          found.exercises.find(
+            (item) =>
+              workout.sets.filter((s) => s.exercise_id === item.exercise_id && !s.is_warmup).length <
+              item.target_sets,
+          ) ?? found.exercises[0];
+        if (next) setSelectedId((current) => current ?? next.exercise_id);
+      })
+      .catch((e) => setError(errorMessage(e)));
+  }, [workout.id, workout.sets]);
+
+  useEffect(() => {
+    if (!selectedId || selectedId in lastSessions) return;
+    const exerciseId = selectedId;
+    getLastSession(exerciseId, workout.id)
+      .then((session) => setLastSessions((prev) => ({ ...prev, [exerciseId]: session })))
+      .catch((e) => {
+        setError(errorMessage(e));
+        setLastSessions((prev) => ({ ...prev, [exerciseId]: null }));
+      });
+  }, [selectedId, lastSessions, workout.id]);
+
   const logged = groupByExercise(sets);
-  const groups: ExerciseGroup[] = [
-    ...logged,
+  const planned = routine?.exercises ?? [];
+  const isPlanned = (id: string) => planned.some((p) => p.exercise_id === id);
+  const isLogged = (id: string) => logged.some((g) => g.exerciseId === id);
+
+  const rows: Row[] = [
+    ...planned.map((plan) => ({
+      ...(logged.find((g) => g.exerciseId === plan.exercise_id) ?? {
+        exerciseId: plan.exercise_id,
+        name: plan.exercise_name,
+        sets: [],
+      }),
+      plan,
+    })),
+    ...logged.filter((g) => !isPlanned(g.exerciseId)),
     ...added
-      .filter((e) => !logged.some((g) => g.exerciseId === e.id))
+      .filter((e) => !isPlanned(e.id) && !isLogged(e.id))
       .map((e) => ({ exerciseId: e.id, name: e.name, sets: [] })),
   ];
-  const selected = groups.find((g) => g.exerciseId === selectedId) ?? null;
-  const lastSet = selected?.sets[selected.sets.length - 1];
+
+  const selected = rows.find((r) => r.exerciseId === selectedId) ?? null;
+  const lastSession = selected ? lastSessions[selected.exerciseId] : undefined;
+  const suggestion =
+    selected && lastSession ? suggestNext(lastSession.sets, selected.plan ?? DEFAULT_TARGET) : null;
+  const lastSetToday = selected?.sets[selected.sets.length - 1];
 
   function handlePick(exercise: Exercise) {
     setPickerOpen(false);
-    if (!groups.some((g) => g.exerciseId === exercise.id)) {
+    if (!rows.some((r) => r.exerciseId === exercise.id)) {
       setAdded([...added, { id: exercise.id, name: exercise.name }]);
     }
     setSelectedId(exercise.id);
@@ -107,11 +162,12 @@ export function ActiveWorkout({ workout, onFinished, onDeleted }: Props) {
     try {
       if (empty) {
         await deleteWorkout(workout.id);
-        onDeleted();
       } else {
         await finishWorkout(workout.id);
-        onFinished();
       }
+      await forgetRoutine(workout.id);
+      if (empty) onDeleted();
+      else onFinished();
     } catch (e) {
       setError(errorMessage(e));
       setFinishing(false);
@@ -123,7 +179,9 @@ export function ActiveWorkout({ workout, onFinished, onDeleted }: Props) {
       <View style={styles.topBar}>
         <View style={styles.clock}>
           <Elapsed since={workout.started_at} style={styles.clockValue} />
-          <Text style={styles.clockLabel}>Started {formatTime(workout.started_at)}</Text>
+          <Text style={styles.clockLabel}>
+            {routine ? `${routine.name} · ` : ''}Started {formatTime(workout.started_at)}
+          </Text>
         </View>
         <View style={styles.finish}>
           <Button label="Finish" onPress={handleFinish} variant="secondary" loading={finishing} />
@@ -133,16 +191,17 @@ export function ActiveWorkout({ workout, onFinished, onDeleted }: Props) {
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        {groups.length === 0 ? (
+        {rows.length === 0 ? (
           <Text style={styles.hint}>Add your first exercise to start logging sets.</Text>
         ) : null}
 
-        {groups.map((group) => (
+        {rows.map((row) => (
           <ExerciseCard
-            key={group.exerciseId}
-            group={group}
-            selected={group.exerciseId === selectedId}
-            onSelect={() => setSelectedId(group.exerciseId)}
+            key={row.exerciseId}
+            group={row}
+            targetSets={row.plan?.target_sets}
+            selected={row.exerciseId === selectedId}
+            onSelect={() => setSelectedId(row.exerciseId)}
             onDeleteSet={handleDeleteSet}
           />
         ))}
@@ -150,15 +209,22 @@ export function ActiveWorkout({ workout, onFinished, onDeleted }: Props) {
         <Button label="Add exercise" onPress={() => setPickerOpen(true)} variant="secondary" />
       </ScrollView>
 
-      {selected ? (
+      {selected && lastSession === undefined ? (
+        <View style={styles.dockLoading}>
+          <ActivityIndicator color={colors.accent} />
+        </View>
+      ) : null}
+
+      {selected && lastSession !== undefined ? (
         <SetEntry
           // A new key resets the steppers when you switch exercise.
           key={selected.exerciseId}
           exerciseName={selected.name}
-          initialWeightKg={lastSet?.weight_kg ?? DEFAULT_WEIGHT_KG}
-          initialReps={lastSet?.reps ?? DEFAULT_REPS}
-          onAdd={handleAddSet}
-        />
+          initialWeightKg={lastSetToday?.weight_kg ?? suggestion?.weightKg ?? DEFAULT_WEIGHT_KG}
+          initialReps={lastSetToday?.reps ?? suggestion?.reps ?? DEFAULT_REPS}
+          onAdd={handleAddSet}>
+          <LastTime session={lastSession} suggestion={suggestion} />
+        </SetEntry>
       ) : null}
 
       <ExercisePicker visible={pickerOpen} onClose={() => setPickerOpen(false)} onPick={handlePick} />
@@ -176,11 +242,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.md,
   },
-  clock: { gap: 2 },
+  clock: { flex: 1, gap: 2 },
   clockValue: { color: colors.text, fontSize: 28, fontWeight: '700' },
   clockLabel: { color: colors.textDim, fontSize: 13 },
   finish: { width: 120 },
   error: { color: colors.danger, fontSize: 15, paddingHorizontal: spacing.lg, paddingBottom: spacing.md },
   content: { padding: spacing.lg, paddingTop: 0, gap: spacing.md },
   hint: { color: colors.textDim, fontSize: 16, textAlign: 'center', paddingVertical: spacing.xl },
+  dockLoading: {
+    padding: spacing.xl,
+    backgroundColor: colors.card,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
 });

@@ -4,53 +4,73 @@ import { FlatList, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { HistoryRow } from '@/components/history-row';
+import { RoutineCard } from '@/components/routine-card';
 import { LoadingScreen } from '@/components/screen';
 import { errorMessage, formatTime } from '@/lib/format';
+import { rememberRoutine } from '@/lib/plans';
+import { createRoutine, listRoutines } from '@/lib/routines';
 import { colors, radius, spacing } from '@/lib/theme';
-import type { Workout, WorkoutHistoryItem } from '@/lib/types';
+import type { Routine, Workout, WorkoutHistoryItem } from '@/lib/types';
 import { getActiveWorkout, listWorkoutHistory, startWorkout } from '@/lib/workouts';
 
+type Loaded = { active: Workout | null; routines: Routine[]; history: WorkoutHistoryItem[] };
+
 export default function WorkoutTab() {
-  const [active, setActive] = useState<Workout | null>(null);
-  const [history, setHistory] = useState<WorkoutHistoryItem[] | null>(null);
+  const [data, setData] = useState<Loaded | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [starting, setStarting] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   // Reload whenever this tab comes back into view, e.g. after finishing a workout.
   const load = useCallback(() => {
     setError(null);
-    Promise.all([getActiveWorkout(), listWorkoutHistory()])
-      .then(([current, past]) => {
-        setActive(current);
-        setHistory(past);
-      })
+    Promise.all([getActiveWorkout(), listRoutines(), listWorkoutHistory()])
+      .then(([active, routines, history]) => setData({ active, routines, history }))
       .catch((e) => setError(errorMessage(e)));
   }, []);
 
   useFocusEffect(load);
 
-  function open(id: string) {
+  function openWorkout(id: string) {
     router.push({ pathname: '/session/[id]', params: { id } });
   }
 
-  async function handleStart() {
+  function openRoutine(id: string) {
+    router.push({ pathname: '/routine/[id]', params: { id } });
+  }
+
+  async function run(action: () => Promise<void>) {
     setError(null);
-    setStarting(true);
+    setBusy(true);
     try {
-      const workout = await startWorkout();
-      open(workout.id);
+      await action();
     } catch (e) {
       setError(errorMessage(e));
     } finally {
-      setStarting(false);
+      setBusy(false);
     }
   }
 
-  if (history === null && !error) return <LoadingScreen />;
+  const start = (routine?: Routine) =>
+    run(async () => {
+      const workout = await startWorkout();
+      if (routine) await rememberRoutine(workout.id, routine.id);
+      openWorkout(workout.id);
+    });
+
+  const newRoutine = () =>
+    run(async () => {
+      openRoutine(await createRoutine('New routine'));
+    });
+
+  if (!data && !error) return <LoadingScreen />;
+
+  const active = data?.active ?? null;
+  const routines = data?.routines ?? [];
+  const history = data?.history ?? [];
 
   return (
     <FlatList
-      data={history ?? []}
+      data={history}
       keyExtractor={(w) => w.id}
       contentContainerStyle={styles.content}
       ListHeaderComponent={
@@ -59,11 +79,9 @@ export default function WorkoutTab() {
             <View style={styles.activeCard}>
               <Text style={styles.activeTitle}>Workout in progress</Text>
               <Text style={styles.activeMeta}>Started {formatTime(active.started_at)}</Text>
-              <Button label="Resume workout" onPress={() => open(active.id)} />
+              <Button label="Resume workout" onPress={() => openWorkout(active.id)} />
             </View>
-          ) : (
-            <Button label="Start workout" onPress={handleStart} loading={starting} />
-          )}
+          ) : null}
 
           {error ? (
             <View style={styles.errorBox}>
@@ -72,20 +90,45 @@ export default function WorkoutTab() {
             </View>
           ) : null}
 
-          {history && history.length > 0 ? <Text style={styles.section}>History</Text> : null}
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>Routines</Text>
+            {routines.length === 0 ? (
+              <Text style={styles.hint}>
+                Save a finished workout as a routine, or make one here, to start your usual days in one tap.
+              </Text>
+            ) : null}
+            {routines.map((routine) => (
+              <RoutineCard
+                key={routine.id}
+                routine={routine}
+                onStart={active || busy ? undefined : () => start(routine)}
+                onEdit={() => openRoutine(routine.id)}
+              />
+            ))}
+            <View style={styles.buttons}>
+              <View style={styles.flex}>
+                <Button label="New routine" onPress={newRoutine} variant="secondary" disabled={busy} />
+              </View>
+              {!active ? (
+                <View style={styles.flex}>
+                  <Button label="Empty workout" onPress={() => start()} variant="secondary" disabled={busy} />
+                </View>
+              ) : null}
+            </View>
+          </View>
+
+          {history.length > 0 ? <Text style={styles.sectionLabel}>History</Text> : null}
         </View>
       }
-      ListEmptyComponent={
-        history ? <Text style={styles.empty}>Finished workouts will show up here.</Text> : null
-      }
-      renderItem={({ item }) => <HistoryRow item={item} onPress={() => open(item.id)} />}
+      ListEmptyComponent={data ? <Text style={styles.empty}>Finished workouts will show up here.</Text> : null}
+      renderItem={({ item }) => <HistoryRow item={item} onPress={() => openWorkout(item.id)} />}
     />
   );
 }
 
 const styles = StyleSheet.create({
   content: { padding: spacing.lg, gap: spacing.sm, maxWidth: 640, width: '100%', alignSelf: 'center' },
-  header: { gap: spacing.lg, marginBottom: spacing.sm },
+  header: { gap: spacing.xl, marginBottom: spacing.sm },
   activeCard: {
     backgroundColor: colors.card,
     borderWidth: 2,
@@ -98,13 +141,16 @@ const styles = StyleSheet.create({
   activeMeta: { color: colors.textDim, fontSize: 14, marginBottom: spacing.sm },
   errorBox: { gap: spacing.md },
   error: { color: colors.danger, fontSize: 15 },
-  section: {
+  section: { gap: spacing.sm },
+  sectionLabel: {
     color: colors.textDim,
     fontSize: 13,
     fontWeight: '700',
     letterSpacing: 0.4,
     textTransform: 'uppercase',
-    marginTop: spacing.sm,
   },
+  hint: { color: colors.textDim, fontSize: 15, lineHeight: 21 },
+  buttons: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs },
+  flex: { flex: 1 },
   empty: { color: colors.textDim, fontSize: 16, textAlign: 'center', paddingVertical: spacing.xxl },
 });
