@@ -24,8 +24,9 @@ function Bar({ value, target, color }: { value: number; target: number | null; c
 }
 
 /**
- * The day's calories as a ring split by protein, carbs and fat, beside each macro's
- * grams against target and how many calories it supplied.
+ * The day's nutrition in one card: calories against target across the top, then
+ * a ring (outer: target eaten, inner: where the calories came from) beside each
+ * macro's grams, calories and progress bar.
  */
 export function MacroTotals({ totals, targets }: Props) {
   const macros = [
@@ -40,25 +41,30 @@ export function MacroTotals({ totals, targets }: Props) {
 
   return (
     <View style={styles.card}>
+      <View style={styles.header}>
+        <Text style={styles.kcal}>
+          {fmt(totals.kcal)}
+          <Text style={styles.kcalTarget}>{kcalTarget ? ` / ${fmt(kcalTarget)} kcal` : ' kcal'}</Text>
+        </Text>
+        {remaining !== null ? (
+          <Text style={[styles.remaining, remaining < 0 && styles.over]}>
+            {remaining >= 0 ? `${fmt(remaining)} left` : `${fmt(-remaining)} over`}
+          </Text>
+        ) : null}
+      </View>
+
       <View style={styles.row}>
         <MacroDonut
           kcal={totals.kcal}
-          targetKcal={targets.target_kcal}
+          centreValue={kcalTarget ? `${Math.round((totals.kcal / kcalTarget) * 100)}%` : fmt(totals.kcal)}
+          centreCaption={kcalTarget ? 'of target' : 'kcal'}
+          targetKcal={kcalTarget}
           proteinKcal={macros[0].kcal}
           carbsKcal={macros[1].kcal}
           fatKcal={macros[2].kcal}
         />
 
         <View style={styles.side}>
-          {kcalTarget ? (
-            <Text style={styles.target}>
-              <Text style={[styles.remaining, remaining !== null && remaining < 0 && styles.over]}>
-                {remaining !== null && remaining < 0 ? `${fmt(-remaining)} over` : `${fmt(remaining ?? 0)} left`}
-              </Text>
-              {`  of ${fmt(kcalTarget)}`}
-            </Text>
-          ) : null}
-
           {macros.map((m) => (
             <View key={m.label} style={styles.macro}>
               <View style={styles.macroTop}>
@@ -88,12 +94,15 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: radius.md,
     padding: spacing.lg,
+    gap: spacing.md,
   },
-  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
-  side: { flex: 1, gap: spacing.sm },
-  target: { color: colors.textDim, fontSize: 12 },
-  remaining: { color: colors.text, fontSize: 14, fontWeight: '700' },
+  header: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: spacing.md },
+  kcal: { color: colors.text, fontSize: 26, fontWeight: '700' },
+  kcalTarget: { color: colors.textDim, fontSize: 14, fontWeight: '400' },
+  remaining: { color: colors.textDim, fontSize: 14, fontWeight: '600' },
   over: { color: colors.danger },
+  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
+  side: { flex: 1, gap: spacing.md },
   macro: { gap: 2 },
   macroTop: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   swatch: { width: 8, height: 8, borderRadius: 4 },

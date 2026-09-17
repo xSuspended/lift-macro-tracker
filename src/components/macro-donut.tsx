@@ -5,6 +5,9 @@ import { colors, macroColors } from '@/lib/theme';
 
 type Props = {
   kcal: number;
+  /** Big text in the middle, and the small line under it. */
+  centreValue: string;
+  centreCaption: string;
   /** Daily calorie target; draws the outer progress ring when set. */
   targetKcal: number | null;
   proteinKcal: number;
@@ -23,7 +26,7 @@ const SLICE_GAP = 3;
  * target, white for eaten and grey for what's left. Inner: where the calories came
  * from, split by protein, carbs and fat.
  */
-export function MacroDonut({ kcal, targetKcal, proteinKcal, carbsKcal, fatKcal, size = 140 }: Props) {
+export function MacroDonut({ kcal, centreValue, centreCaption, targetKcal, proteinKcal, carbsKcal, fatKcal, size = 140 }: Props) {
   const centre = size / 2;
   const outerR = (size - OUTER_STROKE) / 2;
   const innerR = outerR - OUTER_STROKE / 2 - RING_GAP - INNER_STROKE / 2;
@@ -90,8 +93,8 @@ export function MacroDonut({ kcal, targetKcal, proteinKcal, carbsKcal, fatKcal, 
         ))}
       </Svg>
       <View style={styles.centre} pointerEvents="none">
-        <Text style={styles.kcal}>{Math.round(kcal).toLocaleString()}</Text>
-        <Text style={styles.unit}>kcal</Text>
+        <Text style={styles.kcal}>{centreValue}</Text>
+        <Text style={styles.unit}>{centreCaption}</Text>
       </View>
     </View>
   );
