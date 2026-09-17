@@ -18,7 +18,8 @@ prefer boring, well-documented tools over clever ones.
 
 ## Database rules
 
-- Schema lives in `supabase/schema.sql` and is already applied to the Supabase project.
+- Schema lives in `supabase/schema.sql`. It is applied by running it in the
+  Supabase SQL Editor.
 - Do not change the schema without asking. Needed changes go in a new file under
   `supabase/migrations/`, to be run manually in the SQL Editor.
 - `user_id` columns default to `auth.uid()` — never send `user_id` from the app on insert.
