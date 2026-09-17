@@ -13,6 +13,9 @@ export const colors = {
   onAccent: '#FFFFFF',
   danger: '#F87171',
   warning: '#EAB308',
+  /** Vivid red for going over a target, with a lighter tint for its shine. */
+  overTarget: '#FF2B2B',
+  overTargetShine: '#FFA3A3',
   onWarning: '#0B0F14',
   success: '#4ADE80',
 };

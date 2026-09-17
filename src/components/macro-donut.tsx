@@ -120,12 +120,23 @@ export function MacroDonut({ kcal, targetKcal, parts, size = 140 }: Props) {
         {targetKcal ? (
           <>
             <Circle cx={centre} cy={centre} r={outerR} stroke={colors.border} strokeWidth={OUTER_STROKE} fill="none" />
+            {kcalOver ? (
+              <Circle
+                cx={centre}
+                cy={centre}
+                r={outerR}
+                stroke={colors.overTarget}
+                strokeWidth={OUTER_STROKE + 8}
+                strokeOpacity={active && active !== 'kcal' ? 0.08 : 0.25}
+                fill="none"
+              />
+            ) : null}
             {eatenShare > 0 ? (
               <Circle
                 cx={centre}
                 cy={centre}
                 r={outerR}
-                stroke={kcalOver ? colors.danger : macroColors.kcal}
+                stroke={kcalOver ? colors.overTarget : macroColors.kcal}
                 strokeWidth={active === 'kcal' ? OUTER_STROKE + 2 : OUTER_STROKE}
                 strokeOpacity={active && active !== 'kcal' ? 0.35 : 1}
                 strokeLinecap={eatenShare < 1 ? 'round' : 'butt'}
@@ -157,9 +168,28 @@ export function MacroDonut({ kcal, targetKcal, parts, size = 140 }: Props) {
           );
           return (
             <G key={arc.key}>
-              {/* Over target: a red outline, with a dark hairline so it still reads against the red fat slice. */}
-              {arc.over ? span(arc.drawn, width + 7, colors.danger) : null}
-              {arc.over ? span(arc.drawn, width + 2, colors.card) : null}
+              {/* Over target: a glowing red outline built from layers (soft halo, bright
+                  edge, pale shine), then a dark hairline so it still reads against the
+                  red fat slice. Layered strokes look the same on Android and web. */}
+              {arc.over ? (
+                <>
+                  <Circle
+                    cx={centre}
+                    cy={centre}
+                    r={innerR}
+                    stroke={colors.overTarget}
+                    strokeWidth={width + 14}
+                    strokeOpacity={0.22 * opacity}
+                    fill="none"
+                    strokeDasharray={`${arc.drawn} ${innerC - arc.drawn}`}
+                    strokeDashoffset={-arc.offset}
+                    transform={rotate}
+                  />
+                  {span(arc.drawn, width + 8, colors.overTarget)}
+                  {span(arc.drawn, width + 4, colors.overTargetShine)}
+                  {span(arc.drawn, width + 2, colors.card)}
+                </>
+              ) : null}
               {/* The whole slice in grey, then the part of the target eaten in colour. */}
               {span(arc.drawn, width, colors.border)}
               {arc.fill > 0 ? span(arc.fill, width, arc.color) : null}

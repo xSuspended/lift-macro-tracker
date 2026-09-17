@@ -14,10 +14,11 @@ const KCAL_PER_GRAM = { protein: 4, carbs: 4, fat: 9 };
 
 const fmt = (n: number) => Math.round(n).toLocaleString();
 
-function Bar({ value, target, color }: { value: number; target: number | null; color: string }) {
+function Bar({ value, target, color, glow }: { value: number; target: number | null; color: string; glow?: boolean }) {
   if (!target) return null;
   return (
-    <View style={styles.track}>
+    // The glow goes on the track: the fill is clipped inside it, but an over-target bar is full anyway.
+    <View style={[styles.track, glow && styles.glow]}>
       <View style={[styles.fill, { width: `${Math.min(1, value / target) * 100}%`, backgroundColor: color }]} />
     </View>
   );
@@ -78,7 +79,8 @@ export function MacroTotals({ totals, targets }: Props) {
               <Bar
                 value={m.grams}
                 target={m.targetGrams}
-                color={m.targetGrams && m.grams > m.targetGrams ? colors.danger : m.color}
+                color={m.targetGrams && m.grams > m.targetGrams ? colors.overTarget : m.color}
+                glow={!!m.targetGrams && m.grams > m.targetGrams}
               />
             </View>
           ))}
@@ -101,7 +103,7 @@ const styles = StyleSheet.create({
   kcal: { color: colors.text, fontSize: 26, fontWeight: '700' },
   kcalTarget: { color: colors.textDim, fontSize: 14, fontWeight: '400' },
   remaining: { color: colors.textDim, fontSize: 14, fontWeight: '600' },
-  over: { color: colors.danger },
+  over: { color: colors.overTarget, textShadowColor: 'rgba(255, 43, 43, 0.6)', textShadowRadius: 8 },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
   side: { flex: 1, gap: spacing.md },
   macro: { gap: 2 },
@@ -110,7 +112,8 @@ const styles = StyleSheet.create({
   macroName: { flex: 1, color: colors.text, fontSize: 13, fontWeight: '600' },
   grams: { color: colors.text, fontSize: 12, fontWeight: '600' },
   percent: { minWidth: 32, textAlign: 'right', color: colors.textDim, fontSize: 12, fontWeight: '600' },
-  percentOver: { color: colors.danger },
+  percentOver: { color: colors.overTarget, textShadowColor: 'rgba(255, 43, 43, 0.6)', textShadowRadius: 8 },
+  glow: { boxShadow: '0 0 8px rgba(255, 43, 43, 0.9)' },
   macroKcal: { color: colors.textDim, fontSize: 11, marginLeft: 14 },
   track: { height: 5, borderRadius: 3, backgroundColor: colors.bg, overflow: 'hidden', marginLeft: 14, marginTop: 2 },
   fill: { height: 5, borderRadius: 3 },
