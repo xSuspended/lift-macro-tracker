@@ -1,6 +1,7 @@
 import { ActivityIndicator, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Button } from '@/components/button';
 import { colors, spacing } from '@/lib/theme';
 
 /** Standard dark page wrapper that respects notches and the status bar. */
@@ -8,7 +9,7 @@ export function Screen({ children, style }: { children: React.ReactNode; style?:
   return <SafeAreaView style={[styles.screen, style]}>{children}</SafeAreaView>;
 }
 
-/** Full-page spinner, used while we check for a saved login. */
+/** Full-page spinner, used while a screen's data loads. */
 export function LoadingScreen() {
   return (
     <View style={styles.centred}>
@@ -17,12 +18,15 @@ export function LoadingScreen() {
   );
 }
 
-/** Placeholder body for tabs we have not built yet. */
-export function ComingSoon({ title, note }: { title: string; note: string }) {
+/** Full-page message for when a screen couldn't load, with a way to try again. */
+export function ErrorScreen({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
     <View style={styles.centred}>
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.note}>{note}</Text>
+      <Text style={styles.title}>Couldn’t load this</Text>
+      <Text style={styles.note}>{message}</Text>
+      <View style={styles.retry}>
+        <Button label="Try again" onPress={onRetry} variant="secondary" />
+      </View>
     </View>
   );
 }
@@ -37,6 +41,7 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     gap: spacing.md,
   },
-  title: { color: colors.text, fontSize: 24, fontWeight: '700' },
+  title: { color: colors.text, fontSize: 22, fontWeight: '700' },
   note: { color: colors.textDim, fontSize: 16, textAlign: 'center', lineHeight: 22 },
+  retry: { alignSelf: 'stretch', maxWidth: 320, width: '100%', marginTop: spacing.sm },
 });

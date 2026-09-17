@@ -30,6 +30,10 @@ export function formatTime(iso: string) {
 
 /** Supabase errors are plain objects, not Error instances, so read .message defensively. */
 export function errorMessage(e: unknown) {
-  if (e && typeof e === 'object' && 'message' in e && typeof e.message === 'string') return e.message;
-  return 'Something went wrong. Check your connection and try again.';
+  const message = e && typeof e === 'object' && 'message' in e && typeof e.message === 'string' ? e.message : null;
+  // Browsers and phones word a dropped connection differently, and none of them helpfully.
+  if (!message || /failed to fetch|network request failed|networkerror|load failed/i.test(message)) {
+    return 'No connection. Check your signal and try again.';
+  }
+  return message;
 }

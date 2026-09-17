@@ -1,9 +1,9 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/button';
-import { LoadingScreen } from '@/components/screen';
+import { ErrorScreen, LoadingScreen } from '@/components/screen';
 import { TextField } from '@/components/text-field';
 import { confirm } from '@/lib/confirm';
 import { createFood, deleteFood, getFood, updateFood, type FoodInput } from '@/lib/food';
@@ -32,8 +32,9 @@ export default function EditFoodScreen() {
   const [busy, setBusy] = useState<'save' | 'delete' | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const loadFood = useCallback(() => {
     if (!editingId) return;
+    setError(null);
     getFood(editingId)
       .then((food) =>
         setFields({
@@ -50,7 +51,9 @@ export default function EditFoodScreen() {
       .catch((e) => setError(errorMessage(e)));
   }, [editingId]);
 
-  if (!fields) return error ? <Text style={[styles.error, styles.padded]}>{error}</Text> : <LoadingScreen />;
+  useEffect(loadFood, [loadFood]);
+
+  if (!fields) return error ? <ErrorScreen message={error} onRetry={loadFood} /> : <LoadingScreen />;
 
   const set = (key: keyof Fields) => (text: string) => setFields({ ...fields, [key]: text });
 

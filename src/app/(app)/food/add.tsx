@@ -35,6 +35,7 @@ export default function AddFoodScreen() {
 
   // Reload when coming back from creating or editing a food.
   const load = useCallback(() => {
+    setError(null);
     Promise.all([listFoods(), listSavedMeals()])
       .then(([f, m]) => {
         if (creatingFood.current) {
@@ -94,6 +95,7 @@ export default function AddFoodScreen() {
           onChange={setTab}
         />
         {error ? <Text style={styles.error}>{error}</Text> : null}
+        {error && foods === null ? <Button label="Try again" onPress={load} variant="secondary" /> : null}
       </View>
 
       {tab === 'foods' ? (

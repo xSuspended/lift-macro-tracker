@@ -6,7 +6,7 @@ import { Button } from '@/components/button';
 import { ExercisePicker } from '@/components/exercise-picker';
 import { ReorderableList } from '@/components/reorderable-list';
 import { ROUTINE_ROW_HEIGHT, RoutineExerciseRow } from '@/components/routine-exercise-row';
-import { LoadingScreen } from '@/components/screen';
+import { ErrorScreen, LoadingScreen } from '@/components/screen';
 import { TextField } from '@/components/text-field';
 import { confirm } from '@/lib/confirm';
 import { errorMessage } from '@/lib/format';
@@ -45,11 +45,14 @@ export default function RoutineScreen() {
     return found;
   }, [id, leave]);
 
-  useEffect(() => {
+  const loadRoutine = useCallback(() => {
+    setError(null);
     refresh()
       .then((found) => found && setName(found.name))
       .catch((e) => setError(errorMessage(e)));
   }, [refresh]);
+
+  useEffect(loadRoutine, [loadRoutine]);
 
   async function save(action: () => Promise<void>) {
     setError(null);
@@ -148,7 +151,7 @@ export default function RoutineScreen() {
   }
 
   if (!routine) {
-    return error ? <Text style={[styles.error, styles.padded]}>{error}</Text> : <LoadingScreen />;
+    return error ? <ErrorScreen message={error} onRetry={loadRoutine} /> : <LoadingScreen />;
   }
 
   return (

@@ -88,6 +88,9 @@ prefer boring, well-documented tools over clever ones.
    `USDA_API_KEY` function secret, or DEMO_KEY without one. Picked results are
    saved into `foods` with `source`/`source_ref` (unique per user). Barcode
    scanning (expo-camera) is phone-only and hidden on web.
-6. Body weight + polish: body weight log and chart, weight unit setting,
-   loading/empty/error states, offline-friendly where easy.
+6. **Body weight + polish** — done. kg/lb setting (`src/lib/units.tsx`; data
+   stays kg, lb steppers move 5 lb), body weight log/chart on Progress, sets
+   logged without signal queue on the device and upload later
+   (`src/lib/set-queue.ts`), CSV export in Settings (`save-file.ts` for phones,
+   `save-file.web.ts` for web), Try again screens, friendly offline messages.
 7. Ship: Android APK via EAS Build; web build deployed to Vercel or Netlify.
