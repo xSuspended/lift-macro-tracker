@@ -12,10 +12,12 @@ type Props = {
   reps: number;
   rpe: number | null;
   isWarmup: boolean;
+  /** Saved on the device only, waiting for signal. */
+  pending?: boolean;
   onDelete?: () => void;
 };
 
-export function SetRow({ label, weightKg, reps, rpe, isWarmup, onDelete }: Props) {
+export function SetRow({ label, weightKg, reps, rpe, isWarmup, pending, onDelete }: Props) {
   const { unit } = useUnits();
   return (
     <View style={[styles.row, !onDelete && styles.rowReadOnly]}>
@@ -24,6 +26,9 @@ export function SetRow({ label, weightKg, reps, rpe, isWarmup, onDelete }: Props
         {formatWeight(weightKg, unit)} × {reps}
       </Text>
       {rpe !== null ? <Text style={styles.rpe}>RPE {formatNumber(rpe)}</Text> : null}
+      {pending ? (
+        <Ionicons name="cloud-offline-outline" size={18} color={colors.warning} accessibilityLabel="Waiting for signal" />
+      ) : null}
       {onDelete ? (
         <Pressable
           accessibilityLabel="Delete set"

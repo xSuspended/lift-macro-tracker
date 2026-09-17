@@ -31,7 +31,11 @@ export type WorkoutSet = {
   created_at: string;
 };
 
-export type LoggedSet = WorkoutSet & { exercise_name: string };
+export type LoggedSet = WorkoutSet & {
+  exercise_name: string;
+  /** Logged with no signal: kept on the device until it can be saved. */
+  pending?: boolean;
+};
 
 export type WorkoutDetail = Workout & { sets: LoggedSet[] };
 

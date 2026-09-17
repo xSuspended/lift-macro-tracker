@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, AppState, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { Elapsed } from '@/components/elapsed';
@@ -12,11 +12,11 @@ import { errorMessage, formatTime } from '@/lib/format';
 import { forgetRoutine, getRememberedRoutineId } from '@/lib/plans';
 import { DEFAULT_TARGET, suggestNext } from '@/lib/progression';
 import { getRoutine } from '@/lib/routines';
+import { addSetOrQueue, flushPendingSets, pendingSetsFor, removePendingSet } from '@/lib/set-queue';
 import { colors, spacing } from '@/lib/theme';
 import { formatWeight, toKg, useUnits } from '@/lib/units';
 import type { Exercise, LoggedSet, Routine, RoutineExercise, WorkoutDetail } from '@/lib/types';
 import {
-  addSet,
   deleteSet,
   deleteWorkout,
   finishWorkout,
@@ -53,6 +53,46 @@ export function ActiveWorkout({ workout, onFinished, onDeleted }: Props) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [finishing, setFinishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    pendingSetsFor(workout.id).then((waiting) => {
+      if (waiting.length === 0) return;
+      setSets((prev) => [
+        ...prev,
+        ...waiting.filter((w) => !prev.some((s) => s.id === w.id)).map((w) => ({ ...w, pending: true })),
+      ]);
+    });
+  }, [workout.id]);
+
+  // While any set is waiting for signal, keep trying: every 10 seconds, and when
+  // you come back to the app.
+  const pendingCount = sets.filter((s) => s.pending).length;
+  useEffect(() => {
+    if (pendingCount === 0) return;
+    const tryFlush = () =>
+      flushPendingSets()
+        .then((saved) => {
+          if (saved.size === 0) return;
+          // Any "still waiting for signal" warning is now out of date.
+          setError(null);
+          setSets((prev) =>
+            prev.map((s) => {
+              const real = saved.get(s.id);
+              return real ? { ...real, exercise_name: s.exercise_name } : s;
+            }),
+          );
+        })
+        .catch(() => {});
+    tryFlush();
+    const timer = setInterval(tryFlush, 10_000);
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') tryFlush();
+    });
+    return () => {
+      clearInterval(timer);
+      subscription.remove();
+    };
+  }, [pendingCount]);
 
   useEffect(() => {
     getRememberedRoutineId(workout.id)
@@ -119,16 +159,19 @@ export function ActiveWorkout({ workout, onFinished, onDeleted }: Props) {
 
   async function handleAddSet(values: SetValues) {
     if (!selected) return;
-    const row = await addSet({
-      workout_id: workout.id,
-      exercise_id: selected.exerciseId,
-      set_number: selected.sets.length + 1,
-      reps: values.reps,
-      weight_kg: values.weightKg,
-      rpe: values.rpe,
-      is_warmup: values.isWarmup,
-    });
-    setSets((prev) => [...prev, { ...row, exercise_name: selected.name }]);
+    const { set, pending } = await addSetOrQueue(
+      {
+        workout_id: workout.id,
+        exercise_id: selected.exerciseId,
+        set_number: selected.sets.length + 1,
+        reps: values.reps,
+        weight_kg: values.weightKg,
+        rpe: values.rpe,
+        is_warmup: values.isWarmup,
+      },
+      selected.name,
+    );
+    setSets((prev) => [...prev, { ...set, exercise_name: selected.name, pending }]);
   }
 
   async function handleDeleteSet(set: LoggedSet) {
@@ -141,7 +184,8 @@ export function ActiveWorkout({ workout, onFinished, onDeleted }: Props) {
 
     setError(null);
     try {
-      await deleteSet(set.id);
+      if (set.pending) await removePendingSet(set.id);
+      else await deleteSet(set.id);
       setSets((prev) => prev.filter((s) => s.id !== set.id));
     } catch (e) {
       setError(errorMessage(e));
@@ -149,6 +193,26 @@ export function ActiveWorkout({ workout, onFinished, onDeleted }: Props) {
   }
 
   async function handleFinish() {
+    if (pendingCount > 0) {
+      setError(null);
+      const saved = await flushPendingSets().catch(() => new Map());
+      const stillWaiting = pendingCount - saved.size;
+      if (saved.size) {
+        setSets((prev) =>
+          prev.map((s) => {
+            const real = saved.get(s.id);
+            return real ? { ...real, exercise_name: s.exercise_name } : s;
+          }),
+        );
+      }
+      if (stillWaiting > 0) {
+        setError(
+          `${stillWaiting} ${stillWaiting === 1 ? 'set is' : 'sets are'} still saved only on this phone. Finish once you have signal so nothing is lost.`,
+        );
+        return;
+      }
+    }
+
     const empty = sets.length === 0;
     const workingCount = sets.filter((s) => !s.is_warmup).length;
     const ok = await confirm(
@@ -192,6 +256,12 @@ export function ActiveWorkout({ workout, onFinished, onDeleted }: Props) {
       </View>
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
+      {pendingCount > 0 ? (
+        <Text style={styles.offline}>
+          No signal: {pendingCount} {pendingCount === 1 ? 'set is' : 'sets are'} saved on this phone and will upload
+          automatically.
+        </Text>
+      ) : null}
 
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {rows.length === 0 ? (
@@ -251,6 +321,7 @@ const styles = StyleSheet.create({
   finish: { width: 120 },
   error: { color: colors.danger, fontSize: 15, paddingHorizontal: spacing.lg, paddingBottom: spacing.md },
   content: { padding: spacing.lg, paddingTop: 0, gap: spacing.md },
+  offline: { color: colors.warning, fontSize: 14, lineHeight: 20, paddingHorizontal: spacing.lg, paddingBottom: spacing.md },
   hint: { color: colors.textDim, fontSize: 16, textAlign: 'center', paddingVertical: spacing.xl },
   dockLoading: {
     padding: spacing.xl,

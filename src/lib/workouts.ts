@@ -138,6 +138,8 @@ export type NewSet = {
   weight_kg: number;
   rpe: number | null;
   is_warmup: boolean;
+  /** When the set was actually done; sets saved late (after losing signal) pass it so history stays in order. */
+  created_at?: string;
 };
 
 export async function addSet(set: NewSet): Promise<WorkoutSet> {

@@ -19,6 +19,11 @@ export const supabase = createClient(url ?? 'https://placeholder.supabase.co', k
     persistSession: true,
     detectSessionInUrl: false,
   },
+  global: {
+    // Look up fetch on every request instead of keeping the one that existed at
+    // startup, so a test can simulate losing signal by swapping it out.
+    fetch: (...args) => fetch(...args),
+  },
 });
 
 if (Platform.OS !== 'web') {
