@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { MacroDonut } from '@/components/macro-donut';
+import { MacroDonut, type DonutPart } from '@/components/macro-donut';
 import { colors, macroColors, radius, spacing } from '@/lib/theme';
 import type { DayTotals, Targets } from '@/lib/types';
 
@@ -26,13 +26,13 @@ function Bar({ value, target, color }: { value: number; target: number | null; c
 /**
  * The day's nutrition in one card: calories against target across the top, then
  * a ring (outer: target eaten, inner: where the calories came from) beside each
- * macro's grams, calories and progress bar.
+ * macro's grams, % of target, calories and progress bar.
  */
 export function MacroTotals({ totals, targets }: Props) {
-  const macros = [
-    { label: 'Protein', grams: totals.protein_g, target: targets.target_protein_g, kcal: totals.protein_g * KCAL_PER_GRAM.protein, color: macroColors.protein },
-    { label: 'Carbs', grams: totals.carbs_g, target: targets.target_carbs_g, kcal: totals.carbs_g * KCAL_PER_GRAM.carbs, color: macroColors.carbs },
-    { label: 'Fat', grams: totals.fat_g, target: targets.target_fat_g, kcal: totals.fat_g * KCAL_PER_GRAM.fat, color: macroColors.fat },
+  const macros: DonutPart[] = [
+    { key: 'protein', label: 'Protein', color: macroColors.protein, grams: totals.protein_g, targetGrams: targets.target_protein_g, kcal: totals.protein_g * KCAL_PER_GRAM.protein },
+    { key: 'carbs', label: 'Carbs', color: macroColors.carbs, grams: totals.carbs_g, targetGrams: targets.target_carbs_g, kcal: totals.carbs_g * KCAL_PER_GRAM.carbs },
+    { key: 'fat', label: 'Fat', color: macroColors.fat, grams: totals.fat_g, targetGrams: targets.target_fat_g, kcal: totals.fat_g * KCAL_PER_GRAM.fat },
   ];
   const macroKcal = macros.reduce((sum, m) => sum + m.kcal, 0);
 
@@ -54,31 +54,28 @@ export function MacroTotals({ totals, targets }: Props) {
       </View>
 
       <View style={styles.row}>
-        <MacroDonut
-          kcal={totals.kcal}
-          centreValue={kcalTarget ? `${Math.round((totals.kcal / kcalTarget) * 100)}%` : fmt(totals.kcal)}
-          centreCaption={kcalTarget ? 'of target' : 'kcal'}
-          targetKcal={kcalTarget}
-          proteinKcal={macros[0].kcal}
-          carbsKcal={macros[1].kcal}
-          fatKcal={macros[2].kcal}
-        />
+        <MacroDonut kcal={totals.kcal} targetKcal={kcalTarget} parts={macros} />
 
         <View style={styles.side}>
           {macros.map((m) => (
-            <View key={m.label} style={styles.macro}>
+            <View key={m.key} style={styles.macro}>
               <View style={styles.macroTop}>
                 <View style={[styles.swatch, { backgroundColor: m.color }]} />
                 <Text style={styles.macroName}>{m.label}</Text>
                 <Text style={styles.grams}>
                   {fmt(m.grams)}
-                  {m.target ? `/${fmt(m.target)}` : ''} g
+                  {m.targetGrams ? `/${fmt(m.targetGrams)}` : ''} g
                 </Text>
+                {m.targetGrams ? (
+                  <Text style={[styles.percent, m.grams > m.targetGrams && styles.percentOver]}>
+                    {Math.round((m.grams / m.targetGrams) * 100)}%
+                  </Text>
+                ) : null}
               </View>
               <Text style={styles.macroKcal}>
-                {fmt(m.kcal)} kcal{macroKcal > 0 ? ` · ${Math.round((m.kcal / macroKcal) * 100)}%` : ''}
+                {fmt(m.kcal)} kcal{macroKcal > 0 ? ` · ${Math.round((m.kcal / macroKcal) * 100)}% of calories` : ''}
               </Text>
-              <Bar value={m.grams} target={m.target} color={m.color} />
+              <Bar value={m.grams} target={m.targetGrams} color={m.color} />
             </View>
           ))}
         </View>
@@ -108,6 +105,8 @@ const styles = StyleSheet.create({
   swatch: { width: 8, height: 8, borderRadius: 4 },
   macroName: { flex: 1, color: colors.text, fontSize: 13, fontWeight: '600' },
   grams: { color: colors.text, fontSize: 12, fontWeight: '600' },
+  percent: { minWidth: 32, textAlign: 'right', color: colors.textDim, fontSize: 12, fontWeight: '600' },
+  percentOver: { color: colors.warning },
   macroKcal: { color: colors.textDim, fontSize: 11, marginLeft: 14 },
   track: { height: 5, borderRadius: 3, backgroundColor: colors.bg, overflow: 'hidden', marginLeft: 14, marginTop: 2 },
   fill: { height: 5, borderRadius: 3 },
