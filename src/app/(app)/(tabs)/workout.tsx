@@ -6,12 +6,20 @@ import { Button } from '@/components/button';
 import { HistoryRow } from '@/components/history-row';
 import { RoutineCard } from '@/components/routine-card';
 import { LoadingScreen } from '@/components/screen';
+import { TooltipIconButton } from '@/components/tooltip-icon-button';
+import { confirm } from '@/lib/confirm';
 import { errorMessage, formatTime } from '@/lib/format';
-import { rememberRoutine } from '@/lib/plans';
+import { forgetRoutine, rememberRoutine } from '@/lib/plans';
 import { createRoutine, listRoutines } from '@/lib/routines';
-import { colors, radius, spacing } from '@/lib/theme';
+import { colors, radius, spacing, TAP_TARGET } from '@/lib/theme';
 import type { Routine, Workout, WorkoutHistoryItem } from '@/lib/types';
-import { getActiveWorkout, listWorkoutHistory, startWorkout } from '@/lib/workouts';
+import {
+  deleteWorkout,
+  getActiveWorkout,
+  getWorkoutDetail,
+  listWorkoutHistory,
+  startWorkout,
+} from '@/lib/workouts';
 
 type Loaded = { active: Workout | null; routines: Routine[]; history: WorkoutHistoryItem[] };
 
@@ -57,6 +65,27 @@ export default function WorkoutTab() {
       openWorkout(workout.id);
     });
 
+  async function quit(workout: Workout) {
+    setError(null);
+    let sets;
+    try {
+      ({ sets } = await getWorkoutDetail(workout.id));
+    } catch (e) {
+      setError(errorMessage(e));
+      return;
+    }
+    const message = sets.length
+      ? `This deletes the workout and the ${sets.length} ${sets.length === 1 ? 'set' : 'sets'} in it. To keep them, tap Resume and then Finish.`
+      : 'Nothing was logged, so there is nothing to lose.';
+    if (!(await confirm('Quit workout?', message, 'Quit'))) return;
+
+    run(async () => {
+      await deleteWorkout(workout.id);
+      await forgetRoutine(workout.id);
+      load();
+    });
+  }
+
   const newRoutine = () =>
     run(async () => {
       openRoutine(await createRoutine('New routine'));
@@ -79,7 +108,19 @@ export default function WorkoutTab() {
             <View style={styles.activeCard}>
               <Text style={styles.activeTitle}>Workout in progress</Text>
               <Text style={styles.activeMeta}>Started {formatTime(active.started_at)}</Text>
-              <Button label="Resume workout" onPress={() => openWorkout(active.id)} />
+              <View style={styles.activeButtons}>
+                <View style={styles.resume}>
+                  <Button label="Resume workout" onPress={() => openWorkout(active.id)} />
+                </View>
+                <TooltipIconButton
+                  icon="trash-outline"
+                  label="Quit workout"
+                  color={colors.danger}
+                  onPress={() => quit(active)}
+                  loading={busy}
+                  style={styles.quit}
+                />
+              </View>
             </View>
           ) : null}
 
@@ -139,6 +180,10 @@ const styles = StyleSheet.create({
   },
   activeTitle: { color: colors.text, fontSize: 18, fontWeight: '700' },
   activeMeta: { color: colors.textDim, fontSize: 14, marginBottom: spacing.sm },
+  // 90 / 10 split, but the bin never shrinks below a thumb-sized square on a phone.
+  activeButtons: { flexDirection: 'row', gap: spacing.sm },
+  resume: { flex: 9 },
+  quit: { flex: 1, minWidth: TAP_TARGET },
   errorBox: { gap: spacing.md },
   error: { color: colors.danger, fontSize: 15 },
   section: { gap: spacing.sm },
