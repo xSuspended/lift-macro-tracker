@@ -43,6 +43,7 @@ export function MacroTotals({ totals, targets }: Props) {
       <View style={styles.row}>
         <MacroDonut
           kcal={totals.kcal}
+          targetKcal={targets.target_kcal}
           proteinKcal={macros[0].kcal}
           carbsKcal={macros[1].kcal}
           fatKcal={macros[2].kcal}

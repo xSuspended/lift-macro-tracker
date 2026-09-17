@@ -5,21 +5,36 @@ import { colors, macroColors } from '@/lib/theme';
 
 type Props = {
   kcal: number;
+  /** Daily calorie target; draws the outer progress ring when set. */
+  targetKcal: number | null;
   proteinKcal: number;
   carbsKcal: number;
   fatKcal: number;
   size?: number;
 };
 
-const STROKE = 14;
-const GAP = 3;
+const OUTER_STROKE = 5;
+const RING_GAP = 4;
+const INNER_STROKE = 13;
+const SLICE_GAP = 3;
 
-/** A ring split by where the calories came from, with the day's total in the middle. */
-export function MacroDonut({ kcal, proteinKcal, carbsKcal, fatKcal, size = 132 }: Props) {
-  const r = (size - STROKE) / 2;
-  const circumference = 2 * Math.PI * r;
+/**
+ * Two rings with the day's total in the middle. Outer: calories eaten against the
+ * target, white for eaten and grey for what's left. Inner: where the calories came
+ * from, split by protein, carbs and fat.
+ */
+export function MacroDonut({ kcal, targetKcal, proteinKcal, carbsKcal, fatKcal, size = 140 }: Props) {
+  const centre = size / 2;
+  const outerR = (size - OUTER_STROKE) / 2;
+  const innerR = outerR - OUTER_STROKE / 2 - RING_GAP - INNER_STROKE / 2;
+  const outerC = 2 * Math.PI * outerR;
+  const innerC = 2 * Math.PI * innerR;
+  // Start at 12 o'clock and go clockwise.
+  const rotate = `rotate(-90 ${centre} ${centre})`;
+
+  const eatenShare = targetKcal ? Math.min(1, kcal / targetKcal) : 0;
+
   const macroTotal = proteinKcal + carbsKcal + fatKcal;
-
   const parts = [
     { key: 'protein', value: proteinKcal, color: macroColors.protein },
     { key: 'carbs', value: carbsKcal, color: macroColors.carbs },
@@ -28,9 +43,9 @@ export function MacroDonut({ kcal, proteinKcal, carbsKcal, fatKcal, size = 132 }
 
   let offset = 0;
   const arcs = parts.map((part) => {
-    const length = (part.value / macroTotal) * circumference;
+    const length = (part.value / macroTotal) * innerC;
     // Leave a small gap between slices, unless a slice is the whole ring.
-    const drawn = parts.length > 1 ? Math.max(0, length - GAP) : length;
+    const drawn = parts.length > 1 ? Math.max(0, length - SLICE_GAP) : length;
     const arc = { ...part, drawn, offset };
     offset += length;
     return arc;
@@ -39,20 +54,38 @@ export function MacroDonut({ kcal, proteinKcal, carbsKcal, fatKcal, size = 132 }
   return (
     <View style={{ width: size, height: size }}>
       <Svg width={size} height={size}>
-        <Circle cx={size / 2} cy={size / 2} r={r} stroke={colors.bg} strokeWidth={STROKE} fill="none" />
+        {targetKcal ? (
+          <>
+            <Circle cx={centre} cy={centre} r={outerR} stroke={colors.border} strokeWidth={OUTER_STROKE} fill="none" />
+            {eatenShare > 0 ? (
+              <Circle
+                cx={centre}
+                cy={centre}
+                r={outerR}
+                stroke={macroColors.kcal}
+                strokeWidth={OUTER_STROKE}
+                strokeLinecap={eatenShare < 1 ? 'round' : 'butt'}
+                fill="none"
+                strokeDasharray={`${eatenShare * outerC} ${outerC}`}
+                transform={rotate}
+              />
+            ) : null}
+          </>
+        ) : null}
+
+        <Circle cx={centre} cy={centre} r={innerR} stroke={colors.bg} strokeWidth={INNER_STROKE} fill="none" />
         {arcs.map((arc) => (
           <Circle
             key={arc.key}
-            cx={size / 2}
-            cy={size / 2}
-            r={r}
+            cx={centre}
+            cy={centre}
+            r={innerR}
             stroke={arc.color}
-            strokeWidth={STROKE}
+            strokeWidth={INNER_STROKE}
             fill="none"
-            strokeDasharray={`${arc.drawn} ${circumference - arc.drawn}`}
+            strokeDasharray={`${arc.drawn} ${innerC - arc.drawn}`}
             strokeDashoffset={-arc.offset}
-            // Start at 12 o'clock and go clockwise.
-            transform={`rotate(-90 ${size / 2} ${size / 2})`}
+            transform={rotate}
           />
         ))}
       </Svg>
@@ -66,6 +99,6 @@ export function MacroDonut({ kcal, proteinKcal, carbsKcal, fatKcal, size = 132 }
 
 const styles = StyleSheet.create({
   centre: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', justifyContent: 'center' },
-  kcal: { color: colors.text, fontSize: 24, fontWeight: '700' },
+  kcal: { color: colors.text, fontSize: 22, fontWeight: '700' },
   unit: { color: colors.textDim, fontSize: 12, marginTop: -2 },
 });

@@ -5,6 +5,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { AmountSheet } from '@/components/amount-sheet';
 import { Button } from '@/components/button';
+import { MacroBars } from '@/components/macro-bars';
 import { MacroTotals } from '@/components/macro-totals';
 import { MealSection } from '@/components/meal-section';
 import { NamePrompt } from '@/components/name-prompt';
@@ -127,6 +128,7 @@ export default function FoodTab() {
         ) : null}
 
         {targets ? <MacroTotals totals={dayTotals} targets={targets} /> : null}
+        {targets ? <MacroBars totals={dayTotals} targets={targets} /> : null}
 
         {targets && !hasAllTargets ? (
           <Pressable onPress={() => router.navigate('/settings')}>
