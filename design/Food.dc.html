@@ -1,0 +1,256 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    /* React Native sizes everything border-box; match it so the mockup
+       measures the same as the built screen. */
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: #3B82F6; }
+    a:hover { color: #2563EB; }
+  </style>
+</helmet>
+
+<div style="width: 375px; height: 812px; background: #0B0F14; color: #E6EDF3; display: flex; flex-direction: column; overflow: hidden;">
+
+  <!-- Header -->
+  <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 12px 16px;">
+    <div style="display: flex; flex-direction: column; gap: 2px;">
+      <div style="font-size: 24px; font-weight: 700; letter-spacing: -0.3px;">Today</div>
+      <div style="font-size: 13px; color: #8B98A5;">Wed 17 Sep</div>
+    </div>
+    <div style="min-height: 44px; display: flex; align-items: center; gap: 6px; padding: 0 14px; border-radius: 12px; background: #3B82F6;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round">
+        <path d="M12 5v14M5 12h14"></path>
+      </svg>
+      <span style="font-size: 15px; font-weight: 600; color: #FFFFFF;">Add food</span>
+    </div>
+  </div>
+
+  <!-- Seven-day trend chart -->
+  <div style="margin: 0 16px 12px 16px; background: #161B22; border: 1px solid #2A323D; border-radius: 12px; padding: 14px 16px 12px 16px; display: flex; flex-direction: column; gap: 10px;">
+
+    <div style="display: flex; align-items: baseline; justify-content: space-between;">
+      <div style="font-size: 13px; font-weight: 700; color: #8B98A5; letter-spacing: 0.4px; text-transform: uppercase;">Last 7 days</div>
+      <div style="font-size: 12px; color: #8B98A5;">% of daily target</div>
+    </div>
+
+    <svg width="311" height="140" viewBox="0 0 311 140" style="display: block;">
+      <!-- gridlines -->
+      <line x1="26" y1="10" x2="268" y2="10" stroke="#2A323D" stroke-width="1"></line>
+      <line x1="26" y1="37" x2="268" y2="37" stroke="#2A323D" stroke-width="1"></line>
+      <line x1="26" y1="91" x2="268" y2="91" stroke="#2A323D" stroke-width="1"></line>
+      <line x1="26" y1="118" x2="268" y2="118" stroke="#2A323D" stroke-width="1"></line>
+
+      <!-- the 100% target line, deliberately distinct from the data -->
+      <line x1="26" y1="64" x2="268" y2="64" stroke="#8B98A5" stroke-width="1" stroke-dasharray="2 3" opacity="0.85"></line>
+
+      <!-- y axis labels -->
+      <text x="21" y="14" text-anchor="end" font-size="9" fill="#8B98A5" font-family="inherit">130</text>
+      <text x="21" y="41" text-anchor="end" font-size="9" fill="#8B98A5" font-family="inherit">115</text>
+      <text x="21" y="67.5" text-anchor="end" font-size="9" fill="#8B98A5" font-family="inherit">100</text>
+      <text x="21" y="95" text-anchor="end" font-size="9" fill="#8B98A5" font-family="inherit">85</text>
+      <text x="21" y="122" text-anchor="end" font-size="9" fill="#8B98A5" font-family="inherit">70</text>
+
+      <!-- Carbs: long dash -->
+      <path d="M28 60.4 L68 31.6 L108 82 L148 55 L188 71.2 L228 26.2 L268 78.4" fill="none" stroke="#C08A00" stroke-width="2" stroke-dasharray="6 3" stroke-linecap="round" stroke-linejoin="round"></path>
+      <!-- Fat: dotted -->
+      <path d="M28 80.2 L68 69.4 L108 92.8 L148 76.6 L188 85.6 L228 60.4 L268 85.6" fill="none" stroke="#E8544A" stroke-width="2" stroke-dasharray="1 4" stroke-linecap="round" stroke-linejoin="round"></path>
+      <!-- Protein: solid -->
+      <path d="M28 85.6 L68 73 L108 96.4 L148 65.8 L188 80.2 L228 56.8 L268 53.2" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+      <!-- Calories: the aggregate, drawn heaviest and in neutral ink -->
+      <path d="M28 71.2 L68 56.8 L108 85.6 L148 62.2 L188 76.6 L228 46 L268 69.4" fill="none" stroke="#E6EDF3" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"></path>
+
+      <!-- today's markers, ringed against the card surface -->
+      <circle cx="268" cy="26.2" r="4" fill="#C08A00" stroke="#161B22" stroke-width="2"></circle>
+      <circle cx="268" cy="85.6" r="4" fill="#E8544A" stroke="#161B22" stroke-width="2"></circle>
+      <circle cx="268" cy="53.2" r="4" fill="#16A34A" stroke="#161B22" stroke-width="2"></circle>
+      <circle cx="268" cy="69.4" r="4.5" fill="#E6EDF3" stroke="#161B22" stroke-width="2"></circle>
+
+      <!-- direct labels, so a line is never identified by colour alone -->
+      <text x="276" y="29.5" font-size="9" font-weight="700" fill="#8B98A5" font-family="inherit">Carb</text>
+      <text x="276" y="56.5" font-size="9" font-weight="700" fill="#8B98A5" font-family="inherit">Prot</text>
+      <text x="276" y="72.5" font-size="9" font-weight="700" fill="#8B98A5" font-family="inherit">Cal</text>
+      <text x="276" y="88.5" font-size="9" font-weight="700" fill="#8B98A5" font-family="inherit">Fat</text>
+
+      <!-- x axis labels -->
+      <text x="28" y="132" text-anchor="middle" font-size="9" fill="#8B98A5" font-family="inherit">Thu</text>
+      <text x="68" y="132" text-anchor="middle" font-size="9" fill="#8B98A5" font-family="inherit">Fri</text>
+      <text x="108" y="132" text-anchor="middle" font-size="9" fill="#8B98A5" font-family="inherit">Sat</text>
+      <text x="148" y="132" text-anchor="middle" font-size="9" fill="#8B98A5" font-family="inherit">Sun</text>
+      <text x="188" y="132" text-anchor="middle" font-size="9" fill="#8B98A5" font-family="inherit">Mon</text>
+      <text x="228" y="132" text-anchor="middle" font-size="9" fill="#8B98A5" font-family="inherit">Tue</text>
+      <text x="268" y="132" text-anchor="middle" font-size="9" fill="#8B98A5" font-family="inherit">Wed</text>
+    </svg>
+
+    <!-- Legend with today's real amounts -->
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; border-top: 1px solid #2A323D; padding-top: 10px;">
+      <div style="display: flex; flex-direction: column; gap: 3px;">
+        <div style="display: flex; align-items: center; gap: 5px;">
+          <span style="width: 10px; height: 10px; border-radius: 5px; background: #E6EDF3; flex-shrink: 0;"></span>
+          <span style="font-size: 11px; color: #8B98A5;">Calories</span>
+        </div>
+        <span style="font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums;">2,184</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 3px;">
+        <div style="display: flex; align-items: center; gap: 5px;">
+          <span style="width: 10px; height: 10px; border-radius: 5px; background: #16A34A; flex-shrink: 0;"></span>
+          <span style="font-size: 11px; color: #8B98A5;">Protein</span>
+        </div>
+        <span style="font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums;">169 g</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 3px;">
+        <div style="display: flex; align-items: center; gap: 5px;">
+          <span style="width: 10px; height: 10px; border-radius: 5px; background: #C08A00; flex-shrink: 0;"></span>
+          <span style="font-size: 11px; color: #8B98A5;">Carbs</span>
+        </div>
+        <span style="font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums;">202 g</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 3px;">
+        <div style="display: flex; align-items: center; gap: 5px;">
+          <span style="width: 10px; height: 10px; border-radius: 5px; background: #E8544A; flex-shrink: 0;"></span>
+          <span style="font-size: 11px; color: #8B98A5;">Fat</span>
+        </div>
+        <span style="font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums;">61 g</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Today against target -->
+  <div style="margin: 0 16px 12px 16px; background: #161B22; border: 1px solid #2A323D; border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px;">
+    <div style="display: flex; align-items: baseline; justify-content: space-between;">
+      <div style="display: flex; align-items: baseline; gap: 6px;">
+        <span style="font-size: 26px; font-weight: 700; letter-spacing: -0.4px; font-variant-numeric: tabular-nums;">2,184</span>
+        <span style="font-size: 14px; color: #8B98A5;">/ 2,250 kcal</span>
+      </div>
+      <span style="font-size: 14px; font-weight: 600; color: #8B98A5; font-variant-numeric: tabular-nums;">66 left</span>
+    </div>
+    <div style="height: 8px; border-radius: 4px; background: #0B0F14; overflow: hidden;">
+      <div style="width: 97%; height: 8px; border-radius: 4px; background: #E6EDF3;"></div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px;">
+      <div style="display: flex; flex-direction: column; gap: 5px;">
+        <div style="display: flex; align-items: baseline; justify-content: space-between;">
+          <span style="font-size: 12px; color: #8B98A5;">Protein</span>
+          <span style="font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums;">169/160</span>
+        </div>
+        <div style="height: 6px; border-radius: 3px; background: #0B0F14; overflow: hidden;">
+          <div style="width: 100%; height: 6px; border-radius: 3px; background: #16A34A;"></div>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 5px;">
+        <div style="display: flex; align-items: baseline; justify-content: space-between;">
+          <span style="font-size: 12px; color: #8B98A5;">Carbs</span>
+          <span style="font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums;">202/220</span>
+        </div>
+        <div style="height: 6px; border-radius: 3px; background: #0B0F14; overflow: hidden;">
+          <div style="width: 92%; height: 6px; border-radius: 3px; background: #C08A00;"></div>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 5px;">
+        <div style="display: flex; align-items: baseline; justify-content: space-between;">
+          <span style="font-size: 12px; color: #8B98A5;">Fat</span>
+          <span style="font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums;">61/70</span>
+        </div>
+        <div style="height: 6px; border-radius: 3px; background: #0B0F14; overflow: hidden;">
+          <div style="width: 87%; height: 6px; border-radius: 3px; background: #E8544A;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Meals -->
+  <div style="margin: 0 16px; display: flex; flex-direction: column; gap: 10px; overflow: hidden;">
+
+    <div style="display: flex; flex-direction: column; gap: 5px;">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; padding: 0 2px;">
+        <span style="font-size: 13px; font-weight: 700; color: #8B98A5; letter-spacing: 0.4px; text-transform: uppercase;">Breakfast</span>
+        <span style="font-size: 12px; color: #8B98A5; font-variant-numeric: tabular-nums;">612 kcal</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; min-height: 46px; background: #161B22; border: 1px solid #2A323D; border-radius: 10px; padding: 0 14px;">
+        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0;">
+          <span style="font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Greek yoghurt, 0%</span>
+          <span style="font-size: 11px; color: #8B98A5; font-variant-numeric: tabular-nums;">200 g &middot; P 20 &middot; C 8 &middot; F 0</span>
+        </div>
+        <span style="font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums;">116</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; min-height: 46px; background: #161B22; border: 1px solid #2A323D; border-radius: 10px; padding: 0 14px;">
+        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0;">
+          <span style="font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Porridge oats</span>
+          <span style="font-size: 11px; color: #8B98A5; font-variant-numeric: tabular-nums;">80 g &middot; P 11 &middot; C 50 &middot; F 7</span>
+        </div>
+        <span style="font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums;">303</span>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 5px;">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; padding: 0 2px;">
+        <span style="font-size: 13px; font-weight: 700; color: #8B98A5; letter-spacing: 0.4px; text-transform: uppercase;">Lunch</span>
+        <span style="font-size: 12px; color: #8B98A5; font-variant-numeric: tabular-nums;">784 kcal</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; min-height: 46px; background: #161B22; border: 1px solid #2A323D; border-radius: 10px; padding: 0 14px;">
+        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0;">
+          <span style="font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Chicken breast, grilled</span>
+          <span style="font-size: 11px; color: #8B98A5; font-variant-numeric: tabular-nums;">220 g &middot; P 66 &middot; C 0 &middot; F 8</span>
+        </div>
+        <span style="font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums;">356</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; min-height: 46px; background: #161B22; border: 1px solid #2A323D; border-radius: 10px; padding: 0 14px;">
+        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0;">
+          <span style="font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Roti</span>
+          <span style="font-size: 11px; color: #8B98A5; font-variant-numeric: tabular-nums;">3 &times; 40 g &middot; P 9 &middot; C 60 &middot; F 8</span>
+        </div>
+        <span style="font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums;">348</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="flex-grow: 1;"></div>
+
+  <!-- Tab bar -->
+  <div style="height: 64px; background: #161B22; border-top: 1px solid #2A323D; display: flex; align-items: center; padding: 6px 0;">
+    <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8B98A5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 8v8M7 6v12M17 6v12M20 8v8M7 12h10"></path>
+      </svg>
+      <span style="font-size: 12px; font-weight: 600; color: #8B98A5;">Workout</span>
+    </div>
+    <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6 3v8a2 2 0 002 2 2 2 0 002-2V3M8 13v8"></path>
+        <path d="M17 3c-1.5 1.5-2 3.5-2 5.5S15.5 12 17 12v9"></path>
+      </svg>
+      <span style="font-size: 12px; font-weight: 600; color: #3B82F6;">Food</span>
+    </div>
+    <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8B98A5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 17l6-6 4 4 7-7"></path>
+        <path d="M17 8h4v4"></path>
+      </svg>
+      <span style="font-size: 12px; font-weight: 600; color: #8B98A5;">Progress</span>
+    </div>
+    <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8B98A5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M18.7 14.5a1.5 1.5 0 00.3 1.7l.1.1a1.8 1.8 0 11-2.5 2.5l-.1-.1a1.5 1.5 0 00-1.7-.3 1.5 1.5 0 00-.9 1.4v.2a1.8 1.8 0 11-3.6 0v-.1a1.5 1.5 0 00-1-1.4 1.5 1.5 0 00-1.7.3l-.1.1a1.8 1.8 0 11-2.5-2.5l.1-.1a1.5 1.5 0 00.3-1.7 1.5 1.5 0 00-1.4-.9h-.2a1.8 1.8 0 110-3.6h.1a1.5 1.5 0 001.4-1 1.5 1.5 0 00-.3-1.7l-.1-.1a1.8 1.8 0 112.5-2.5l.1.1a1.5 1.5 0 001.7.3h.1a1.5 1.5 0 00.9-1.4v-.2a1.8 1.8 0 113.6 0v.1a1.5 1.5 0 00.9 1.4 1.5 1.5 0 001.7-.3l.1-.1a1.8 1.8 0 112.5 2.5l-.1.1a1.5 1.5 0 00-.3 1.7v.1a1.5 1.5 0 001.4.9h.2a1.8 1.8 0 110 3.6h-.1a1.5 1.5 0 00-1.4.9z"></path>
+      </svg>
+      <span style="font-size: 12px; font-weight: 600; color: #8B98A5;">Settings</span>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

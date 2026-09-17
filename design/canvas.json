@@ -1,0 +1,24 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "title": "Logging a set", "x": 0, "y": 0, "w": 375, "h": 812 },
+    { "file": "Progress.dc.html", "title": "Progress", "x": 455, "y": 0, "w": 375, "h": 812 },
+    { "file": "Food.dc.html", "title": "Food — today", "x": 910, "y": 0, "w": 375, "h": 812 }
+  ],
+  "annotations": [
+    {
+      "id": "note-logging",
+      "x": 0,
+      "y": -150,
+      "w": 375,
+      "text": "Steppers instead of a keyboard. Weight and reps are 56px tall so you can hit them without looking, and the entry dock stays pinned to the bottom of the screen where your thumb already is.\n\nThe blue strip is the double-progression suggestion, worked out from last session."
+    },
+    {
+      "id": "note-chart-scale",
+      "x": 910,
+      "y": -150,
+      "w": 375,
+      "text": "All four lines share ONE axis: % of your daily target. Calories (~2,200) and protein (~160 g) cannot honestly share a scale in absolute units — the macros would flatten to nothing along the bottom.\n\nToday's real numbers sit under the chart."
+    }
+  ],
+  "launch": { "view": "canvas" }
+}

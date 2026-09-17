@@ -38,6 +38,10 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+# built design canvas (regenerated from design/*.dc.html)
+design/*.html
+!design/*.dc.html
+
 example
 
 # generated native folders

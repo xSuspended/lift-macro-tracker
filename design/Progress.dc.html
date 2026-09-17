@@ -1,0 +1,214 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    /* React Native sizes everything border-box; match it so the mockup
+       measures the same as the built screen. */
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: #3B82F6; }
+    a:hover { color: #2563EB; }
+  </style>
+</helmet>
+
+<div style="width: 375px; height: 812px; background: #0B0F14; color: #E6EDF3; display: flex; flex-direction: column; overflow: hidden;">
+
+  <!-- Header -->
+  <div style="padding: 14px 16px 12px 16px;">
+    <div style="font-size: 24px; font-weight: 700; letter-spacing: -0.3px;">Progress</div>
+  </div>
+
+  <!-- Exercise selector -->
+  <div style="margin: 0 16px 12px 16px; min-height: 56px; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #161B22; border: 1px solid #2A323D; border-radius: 12px; padding: 0 16px;">
+    <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
+        <path d="M4 8v8M7 6v12M17 6v12M20 8v8M7 12h10"></path>
+      </svg>
+      <div style="font-size: 17px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Barbell Bench Press</div>
+    </div>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8B98A5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
+      <path d="M6 9l6 6 6-6"></path>
+    </svg>
+  </div>
+
+  <!-- Metric segmented control -->
+  <div style="margin: 0 16px 14px 16px; display: flex; gap: 4px; background: #161B22; border: 1px solid #2A323D; border-radius: 12px; padding: 4px;">
+    <div style="flex-grow: 1; min-height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 9px; background: #3B82F6;">
+      <span style="font-size: 14px; font-weight: 600; color: #FFFFFF;">Est. 1RM</span>
+    </div>
+    <div style="flex-grow: 1; min-height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 9px;">
+      <span style="font-size: 14px; font-weight: 600; color: #8B98A5;">Top weight</span>
+    </div>
+    <div style="flex-grow: 1; min-height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 9px;">
+      <span style="font-size: 14px; font-weight: 600; color: #8B98A5;">Volume</span>
+    </div>
+  </div>
+
+  <!-- Chart card -->
+  <div style="margin: 0 16px 14px 16px; background: #161B22; border: 1px solid #2A323D; border-radius: 12px; padding: 16px 16px 12px 16px; display: flex; flex-direction: column; gap: 10px;">
+
+    <div style="display: flex; align-items: flex-end; justify-content: space-between;">
+      <div style="display: flex; flex-direction: column; gap: 3px;">
+        <div style="font-size: 13px; font-weight: 700; color: #8B98A5; letter-spacing: 0.4px; text-transform: uppercase;">Estimated 1RM</div>
+        <div style="display: flex; align-items: baseline; gap: 8px;">
+          <span style="font-size: 30px; font-weight: 700; letter-spacing: -0.5px; font-variant-numeric: tabular-nums;">80.0</span>
+          <span style="font-size: 15px; color: #8B98A5;">kg</span>
+        </div>
+      </div>
+      <div style="font-size: 13px; color: #8B98A5;">Last 8 sessions</div>
+    </div>
+
+    <svg width="311" height="140" viewBox="0 0 311 140" style="display: block;">
+      <defs>
+        <linearGradient id="fadeUnderLine" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.24"></stop>
+          <stop offset="100%" stop-color="#3B82F6" stop-opacity="0"></stop>
+        </linearGradient>
+      </defs>
+
+      <!-- gridlines -->
+      <line x1="28" y1="10" x2="305" y2="10" stroke="#2A323D" stroke-width="1"></line>
+      <line x1="28" y1="43.3" x2="305" y2="43.3" stroke="#2A323D" stroke-width="1"></line>
+      <line x1="28" y1="76.7" x2="305" y2="76.7" stroke="#2A323D" stroke-width="1"></line>
+      <line x1="28" y1="110" x2="305" y2="110" stroke="#2A323D" stroke-width="1"></line>
+
+      <!-- y axis labels -->
+      <text x="22" y="14" text-anchor="end" font-size="10" fill="#8B98A5" font-family="inherit">82</text>
+      <text x="22" y="47.3" text-anchor="end" font-size="10" fill="#8B98A5" font-family="inherit">78</text>
+      <text x="22" y="80.7" text-anchor="end" font-size="10" fill="#8B98A5" font-family="inherit">74</text>
+      <text x="22" y="114" text-anchor="end" font-size="10" fill="#8B98A5" font-family="inherit">70</text>
+
+      <!-- area under the line -->
+      <path d="M28 89.2 L67.6 78.3 L107.1 76.7 L146.7 63.3 L186.3 60 L225.9 48.3 L265.4 41.7 L305 26.7 L305 110 L28 110 Z" fill="url(#fadeUnderLine)"></path>
+
+      <!-- the line -->
+      <path d="M28 89.2 L67.6 78.3 L107.1 76.7 L146.7 63.3 L186.3 60 L225.9 48.3 L265.4 41.7 L305 26.7" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+
+      <!-- session markers -->
+      <circle cx="28" cy="89.2" r="2.5" fill="#3B82F6"></circle>
+      <circle cx="67.6" cy="78.3" r="2.5" fill="#3B82F6"></circle>
+      <circle cx="107.1" cy="76.7" r="2.5" fill="#3B82F6"></circle>
+      <circle cx="146.7" cy="63.3" r="2.5" fill="#3B82F6"></circle>
+      <circle cx="186.3" cy="60" r="2.5" fill="#3B82F6"></circle>
+      <circle cx="225.9" cy="48.3" r="2.5" fill="#3B82F6"></circle>
+      <circle cx="265.4" cy="41.7" r="2.5" fill="#3B82F6"></circle>
+
+      <!-- latest point, ringed against the card surface -->
+      <circle cx="305" cy="26.7" r="5" fill="#3B82F6" stroke="#161B22" stroke-width="2"></circle>
+
+      <!-- x axis labels -->
+      <text x="28" y="130" text-anchor="start" font-size="10" fill="#8B98A5" font-family="inherit">14 Jul</text>
+      <text x="166" y="130" text-anchor="middle" font-size="10" fill="#8B98A5" font-family="inherit">15 Aug</text>
+      <text x="305" y="130" text-anchor="end" font-size="10" fill="#8B98A5" font-family="inherit">15 Sep</text>
+    </svg>
+  </div>
+
+  <!-- Improvement over time -->
+  <div style="margin: 0 16px 14px 16px; display: flex; flex-direction: column; gap: 8px;">
+    <div style="font-size: 13px; font-weight: 700; color: #8B98A5; letter-spacing: 0.4px; text-transform: uppercase; padding: 0 2px;">Improvement</div>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px;">
+
+      <div style="background: #161B22; border: 1px solid #2A323D; border-radius: 12px; padding: 12px 10px; display: flex; flex-direction: column; gap: 4px; align-items: center;">
+        <div style="font-size: 12px; font-weight: 600; color: #8B98A5;">Week</div>
+        <div style="display: flex; align-items: center; gap: 3px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ADE80" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 19V6M5 12l7-7 7 7"></path>
+          </svg>
+          <span style="font-size: 19px; font-weight: 700; color: #4ADE80; font-variant-numeric: tabular-nums;">2.3%</span>
+        </div>
+        <div style="font-size: 11px; color: #8B98A5; font-variant-numeric: tabular-nums;">+1.8 kg</div>
+      </div>
+
+      <div style="background: #161B22; border: 1px solid #2A323D; border-radius: 12px; padding: 12px 10px; display: flex; flex-direction: column; gap: 4px; align-items: center;">
+        <div style="font-size: 12px; font-weight: 600; color: #8B98A5;">Month</div>
+        <div style="display: flex; align-items: center; gap: 3px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ADE80" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 19V6M5 12l7-7 7 7"></path>
+          </svg>
+          <span style="font-size: 19px; font-weight: 700; color: #4ADE80; font-variant-numeric: tabular-nums;">5.4%</span>
+        </div>
+        <div style="font-size: 11px; color: #8B98A5; font-variant-numeric: tabular-nums;">+4.1 kg</div>
+      </div>
+
+      <div style="background: #161B22; border: 1px solid #2A323D; border-radius: 12px; padding: 12px 10px; display: flex; flex-direction: column; gap: 4px; align-items: center;">
+        <div style="font-size: 12px; font-weight: 600; color: #8B98A5;">Year</div>
+        <div style="display: flex; align-items: center; gap: 3px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ADE80" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 19V6M5 12l7-7 7 7"></path>
+          </svg>
+          <span style="font-size: 19px; font-weight: 700; color: #4ADE80; font-variant-numeric: tabular-nums;">18.7%</span>
+        </div>
+        <div style="font-size: 11px; color: #8B98A5; font-variant-numeric: tabular-nums;">+12.6 kg</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Recent sessions -->
+  <div style="margin: 0 16px; display: flex; flex-direction: column; gap: 6px;">
+    <div style="font-size: 13px; font-weight: 700; color: #8B98A5; letter-spacing: 0.4px; text-transform: uppercase; padding: 0 2px 2px 2px;">Recent sessions</div>
+
+    <div style="display: flex; align-items: center; gap: 12px; min-height: 48px; background: #161B22; border: 1px solid #2A323D; border-radius: 10px; padding: 0 14px;">
+      <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px;">
+        <div style="font-size: 15px; font-weight: 600;">Mon 15 Sep</div>
+        <div style="font-size: 12px; color: #8B98A5; font-variant-numeric: tabular-nums;">62.5 &times; 12, 12, 11 &middot; 2,156 kg</div>
+      </div>
+      <div style="font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums;">80.0</div>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 12px; min-height: 48px; background: #161B22; border: 1px solid #2A323D; border-radius: 10px; padding: 0 14px;">
+      <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px;">
+        <div style="font-size: 15px; font-weight: 600;">Fri 12 Sep</div>
+        <div style="font-size: 12px; color: #8B98A5; font-variant-numeric: tabular-nums;">60 &times; 10, 9, 8 &middot; 1,620 kg</div>
+      </div>
+      <div style="font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums;">78.2</div>
+    </div>
+  </div>
+
+  <div style="flex-grow: 1;"></div>
+
+  <!-- Tab bar -->
+  <div style="height: 64px; background: #161B22; border-top: 1px solid #2A323D; display: flex; align-items: center; padding: 6px 0;">
+    <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8B98A5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 8v8M7 6v12M17 6v12M20 8v8M7 12h10"></path>
+      </svg>
+      <span style="font-size: 12px; font-weight: 600; color: #8B98A5;">Workout</span>
+    </div>
+    <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8B98A5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6 3v8a2 2 0 002 2 2 2 0 002-2V3M8 13v8"></path>
+        <path d="M17 3c-1.5 1.5-2 3.5-2 5.5S15.5 12 17 12v9"></path>
+      </svg>
+      <span style="font-size: 12px; font-weight: 600; color: #8B98A5;">Food</span>
+    </div>
+    <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 17l6-6 4 4 7-7"></path>
+        <path d="M17 8h4v4"></path>
+      </svg>
+      <span style="font-size: 12px; font-weight: 600; color: #3B82F6;">Progress</span>
+    </div>
+    <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8B98A5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M18.7 14.5a1.5 1.5 0 00.3 1.7l.1.1a1.8 1.8 0 11-2.5 2.5l-.1-.1a1.5 1.5 0 00-1.7-.3 1.5 1.5 0 00-.9 1.4v.2a1.8 1.8 0 11-3.6 0v-.1a1.5 1.5 0 00-1-1.4 1.5 1.5 0 00-1.7.3l-.1.1a1.8 1.8 0 11-2.5-2.5l.1-.1a1.5 1.5 0 00.3-1.7 1.5 1.5 0 00-1.4-.9h-.2a1.8 1.8 0 110-3.6h.1a1.5 1.5 0 001.4-1 1.5 1.5 0 00-.3-1.7l-.1-.1a1.8 1.8 0 112.5-2.5l.1.1a1.5 1.5 0 001.7.3h.1a1.5 1.5 0 00.9-1.4v-.2a1.8 1.8 0 113.6 0v.1a1.5 1.5 0 00.9 1.4 1.5 1.5 0 001.7-.3l.1-.1a1.8 1.8 0 112.5 2.5l-.1.1a1.5 1.5 0 00-.3 1.7v.1a1.5 1.5 0 001.4.9h.2a1.8 1.8 0 110 3.6h-.1a1.5 1.5 0 00-1.4.9z"></path>
+      </svg>
+      <span style="font-size: 12px; font-weight: 600; color: #8B98A5;">Settings</span>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>
