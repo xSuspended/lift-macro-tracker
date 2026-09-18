@@ -382,6 +382,7 @@ insert into public.exercises (user_id, name, muscle_group) values
   (null, 'Barbell Curl', 'Arms'),
   (null, 'Dumbbell Curl', 'Arms'),
   (null, 'Hammer Curl', 'Arms'),
+  (null, 'Cable Curl', 'Arms'),
   (null, 'Triceps Pushdown', 'Arms'),
   (null, 'Skull Crusher', 'Arms'),
   (null, 'Overhead Triceps Extension', 'Arms'),
