@@ -45,6 +45,7 @@ type SetRow = {
   weight_kg: number;
   rpe: number | null;
   is_warmup: boolean;
+  note: string | null;
   created_at: string;
   exercises: { name: string };
   workouts: { started_at: string; finished_at: string | null; paused_seconds: number };
@@ -54,7 +55,7 @@ type SetRow = {
 export async function exportWorkouts() {
   const sets = await readAll<SetRow>(
     'workout_sets',
-    'set_number, reps, weight_kg, rpe, is_warmup, created_at, exercises(name), workouts!inner(started_at, finished_at, paused_seconds)',
+    'set_number, reps, weight_kg, rpe, is_warmup, note, created_at, exercises(name), workouts!inner(started_at, finished_at, paused_seconds)',
     // `id` breaks ties, so paging never repeats or skips rows with the same timestamp.
     ['created_at', 'id'],
   );
@@ -74,11 +75,12 @@ export async function exportWorkouts() {
       lb(s.weight_kg),
       s.reps,
       s.rpe,
+      s.note,
     ];
   });
   await save(
     'workouts',
-    toCsv(['date', 'workout start', 'workout minutes', 'exercise', 'set', 'warm-up', 'weight kg', 'weight lb', 'reps', 'RPE'], rows),
+    toCsv(['date', 'workout start', 'workout minutes', 'exercise', 'set', 'warm-up', 'weight kg', 'weight lb', 'reps', 'RPE', 'note'], rows),
   );
   return rows.length;
 }

@@ -52,6 +52,7 @@ export function ExerciseCard({ group, targetSets, selected, onSelect, onDeleteSe
                 reps={set.reps}
                 rpe={set.rpe}
                 isWarmup={set.is_warmup}
+                note={set.note}
                 pending={set.pending}
                 onDelete={onDeleteSet ? () => onDeleteSet(set) : undefined}
               />

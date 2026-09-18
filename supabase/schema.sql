@@ -108,6 +108,8 @@ create table public.workout_sets (
   -- Rate of Perceived Exertion, 1-10, optional.
   rpe numeric(3, 1) check (rpe is null or (rpe >= 1 and rpe <= 10)),
   is_warmup boolean not null default false,
+  -- Optional comment on the set, e.g. "left shoulder twinged".
+  note text check (note is null or char_length(note) <= 500),
   created_at timestamptz not null default now()
 );
 
@@ -367,6 +369,8 @@ insert into public.exercises (user_id, name, muscle_group) values
   (null, 'Chin-up', 'Back'),
   (null, 'Lat Pulldown', 'Back'),
   (null, 'Seated Cable Row', 'Back'),
+  (null, 'Bent-Over Dumbbell Row', 'Back'),
+  (null, 'Back Extension', 'Back'),
   (null, 'Face Pull', 'Back'),
   (null, 'Barbell Bench Press', 'Chest'),
   (null, 'Incline Barbell Bench Press', 'Chest'),
@@ -383,6 +387,8 @@ insert into public.exercises (user_id, name, muscle_group) values
   (null, 'Dumbbell Curl', 'Arms'),
   (null, 'Hammer Curl', 'Arms'),
   (null, 'Cable Curl', 'Arms'),
+  (null, 'Standing Forearm Cable Curl', 'Arms'),
+  (null, 'Seated Forearm Cable Curl', 'Arms'),
   (null, 'Triceps Pushdown', 'Arms'),
   (null, 'Skull Crusher', 'Arms'),
   (null, 'Overhead Triceps Extension', 'Arms'),

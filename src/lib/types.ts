@@ -28,6 +28,7 @@ export type WorkoutSet = {
   weight_kg: number;
   rpe: number | null;
   is_warmup: boolean;
+  note: string | null;
   created_at: string;
 };
 

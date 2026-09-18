@@ -60,6 +60,8 @@ function toWorkoutSet(p: PendingSet): WorkoutSet {
     weight_kg: p.weight_kg,
     rpe: p.rpe,
     is_warmup: p.is_warmup,
+    // Sets queued before notes existed have no note.
+    note: p.note ?? null,
     created_at: p.created_at,
   };
 }

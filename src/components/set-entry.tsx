@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useState, type ReactNode } from 'react';
-import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { Stepper } from '@/components/stepper';
@@ -13,6 +13,7 @@ export type SetValues = {
   reps: number;
   rpe: number | null;
   isWarmup: boolean;
+  note: string | null;
 };
 
 type Props = {
@@ -35,6 +36,7 @@ export function SetEntry({ exerciseName, initialWeightKg, initialReps, onAdd, ch
   const [reps, setReps] = useState(initialReps);
   const [rpe, setRpe] = useState<number | null>(null);
   const [isWarmup, setIsWarmup] = useState(false);
+  const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -52,7 +54,9 @@ export function SetEntry({ exerciseName, initialWeightKg, initialReps, onAdd, ch
     setError(null);
     setBusy(true);
     try {
-      await onAdd({ weightKg: toKg(weight, unit), reps, rpe, isWarmup });
+      await onAdd({ weightKg: toKg(weight, unit), reps, rpe, isWarmup, note: note.trim() || null });
+      // A note belongs to one set, so start the next one blank.
+      setNote('');
     } catch (e) {
       setError(errorMessage(e));
     } finally {
@@ -111,6 +115,25 @@ export function SetEntry({ exerciseName, initialWeightKg, initialReps, onAdd, ch
         </Pressable>
       </View>
 
+      <View style={styles.note}>
+        <Ionicons name="chatbox-ellipses-outline" size={18} color={colors.textDim} />
+        <TextInput
+          value={note}
+          onChangeText={setNote}
+          placeholder="Note for this set (optional)"
+          placeholderTextColor={colors.textDim}
+          maxLength={500}
+          returnKeyType="done"
+          accessibilityLabel="Note for this set"
+          style={styles.noteInput}
+        />
+        {note ? (
+          <Pressable accessibilityLabel="Clear note" onPress={() => setNote('')} hitSlop={8} style={styles.noteClear}>
+            <Ionicons name="close-circle" size={18} color={colors.textDim} />
+          </Pressable>
+        ) : null}
+      </View>
+
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
       <Button label={isWarmup ? 'Add warm-up set' : 'Add set'} onPress={handleAdd} loading={busy} />
@@ -158,6 +181,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  note: {
+    minHeight: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.bg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    paddingLeft: spacing.md,
+  },
+  noteInput: { flex: 1, minHeight: 44, color: colors.text, fontSize: 15 },
+  noteClear: { width: 40, height: 44, alignItems: 'center', justifyContent: 'center' },
   pressed: { backgroundColor: colors.cardPressed },
   error: { color: colors.danger, fontSize: 14 },
 });

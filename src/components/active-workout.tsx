@@ -168,6 +168,7 @@ export function ActiveWorkout({ workout, onFinished, onDeleted }: Props) {
         weight_kg: values.weightKg,
         rpe: values.rpe,
         is_warmup: values.isWarmup,
+        note: values.note,
       },
       selected.name,
     );

@@ -2,7 +2,7 @@ import { supabase } from './supabase';
 import type { LoggedSet, Workout, WorkoutDetail, WorkoutHistoryItem, WorkoutSet } from './types';
 
 const WORKOUT_COLUMNS = 'id, started_at, finished_at, paused_at, paused_seconds, notes';
-const SET_COLUMNS = 'id, workout_id, exercise_id, set_number, reps, weight_kg, rpe, is_warmup, created_at';
+const SET_COLUMNS = 'id, workout_id, exercise_id, set_number, reps, weight_kg, rpe, is_warmup, note, created_at';
 
 /** The workout you started but have not finished, if any. */
 export async function getActiveWorkout(): Promise<Workout | null> {
@@ -138,6 +138,7 @@ export type NewSet = {
   weight_kg: number;
   rpe: number | null;
   is_warmup: boolean;
+  note: string | null;
   /** When the set was actually done; sets saved late (after losing signal) pass it so history stays in order. */
   created_at?: string;
 };

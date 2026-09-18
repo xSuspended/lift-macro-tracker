@@ -20,6 +20,14 @@ export function LastTime({ session, suggestion }: Props) {
 
   const working = session.sets.filter((s) => !s.is_warmup);
 
+  // Notes you left last time, labelled like the set list ("Set 2", "Warm-up").
+  let workingNumber = 0;
+  const notes: { key: string; label: string; note: string }[] = [];
+  session.sets.forEach((set) => {
+    if (!set.is_warmup) workingNumber += 1;
+    if (set.note) notes.push({ key: set.id, label: set.is_warmup ? 'Warm-up' : `Set ${workingNumber}`, note: set.note });
+  });
+
   return (
     <View style={styles.wrap}>
       <View style={styles.header}>
@@ -34,6 +42,13 @@ export function LastTime({ session, suggestion }: Props) {
           </Text>
         ))}
       </View>
+
+      {notes.map(({ key, label, note }) => (
+        <Text key={key} style={styles.note} numberOfLines={2}>
+          <Text style={styles.noteLabel}>{label}: </Text>
+          {note}
+        </Text>
+      ))}
 
       {suggestion ? (
         <View style={styles.suggestion}>
@@ -69,6 +84,8 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     overflow: 'hidden',
   },
+  note: { color: colors.textDim, fontSize: 13, fontStyle: 'italic', lineHeight: 18 },
+  noteLabel: { fontStyle: 'normal', fontWeight: '600' },
   suggestion: {
     flexDirection: 'row',
     gap: spacing.sm,
