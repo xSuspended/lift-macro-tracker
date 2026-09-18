@@ -103,3 +103,9 @@ prefer boring, well-documented tools over clever ones.
      servers (account `xsuspended`). The `EXPO_PUBLIC_*` values come from
      the EAS "preview" environment, because `.env` isn't uploaded. New APK:
      `npx.cmd eas-cli@latest build -p android --profile preview`.
+   - Phone updates: EAS Update, channel `preview`, runtimeVersion policy
+     `appVersion`. Screen/logic changes go out without a new APK:
+     `npx.cmd eas-cli@latest update --channel preview --environment preview --message "..."`.
+     Adding a native library, or changing app.json plugins/permissions/icon,
+     needs a new APK: bump `version` in app.json first (so old APKs don't
+     receive code they can't run), then build.

@@ -2,7 +2,7 @@
   "expo": {
     "name": "Lift & Macro",
     "slug": "lift-macro-tracker",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "liftmacro",
@@ -56,6 +56,12 @@
         "projectId": "e0f49de9-246d-47fb-a6c0-486261455701"
       }
     },
-    "owner": "xsuspended"
+    "owner": "xsuspended",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/e0f49de9-246d-47fb-a6c0-486261455701"
+    }
   }
 }
