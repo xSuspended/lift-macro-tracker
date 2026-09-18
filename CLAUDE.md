@@ -93,4 +93,13 @@ prefer boring, well-documented tools over clever ones.
    logged without signal queue on the device and upload later
    (`src/lib/set-queue.ts`), CSV export in Settings (`save-file.ts` for phones,
    `save-file.web.ts` for web), Try again screens, friendly offline messages.
-7. Ship: Android APK via EAS Build; web build deployed to Vercel or Netlify.
+7. **Ship** — done. Code is open source (MIT) at
+   github.com/xSuspended/lift-macro-tracker, branch `main`. Commit as the
+   repo's local git identity (GitHub noreply address), never a personal email.
+   - Web: Vercel builds every push to `main` using `vercel.json`, live at
+     https://lift-macro-tracker.vercel.app. The two `EXPO_PUBLIC_*` values
+     are set in the Vercel project's Environment Variables.
+   - Android: `eas.json` profile `preview` builds an installable APK on Expo's
+     servers (account `xsuspended`). The `EXPO_PUBLIC_*` values come from
+     the EAS "preview" environment, because `.env` isn't uploaded. New APK:
+     `npx.cmd eas-cli@latest build -p android --profile preview`.
