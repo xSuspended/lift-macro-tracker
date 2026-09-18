@@ -36,3 +36,13 @@ src/components/ small shared UI pieces
 src/lib/        Supabase client, auth, theme
 supabase/       database schema and migrations
 ```
+
+## Licence
+
+The code is under the [MIT licence](LICENSE).
+
+The built-in food list (`src/data/food-tables.json`) comes from government food
+composition tables (UK CoFID, Canadian Nutrient File, Australian AFCD, Indian
+IFCT) and keeps their own open licences — sources and links are listed at the
+top of `scripts/build-food-tables.mjs`. Online search results come from Open
+Food Facts (ODbL) and USDA FoodData Central (public domain).
