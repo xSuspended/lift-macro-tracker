@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { WorkoutSet } from './types';
-import { addSet, type NewSet } from './workouts';
+import { addSet, type NewSet, type SetPatch } from './workouts';
 
 // Sets logged with no signal are kept on the device and saved once the
 // connection is back, so a gym basement doesn't lose your workout.
@@ -70,6 +70,16 @@ export async function pendingSetsFor(workoutId: string) {
   return (await readQueue())
     .filter((p) => p.workout_id === workoutId)
     .map((p) => ({ ...toWorkoutSet(p), exercise_name: p.exercise_name }));
+}
+
+/** Changes a set that's still waiting for signal, so edits work offline too. */
+export async function updatePendingSet(tempId: string, patch: SetPatch): Promise<WorkoutSet> {
+  const queue = await readQueue();
+  const found = queue.find((p) => p.temp_id === tempId);
+  if (!found) throw new Error('That set is no longer waiting to be saved.');
+  const updated = { ...found, ...patch };
+  await writeQueue(queue.map((p) => (p.temp_id === tempId ? updated : p)));
+  return toWorkoutSet(updated);
 }
 
 export async function removePendingSet(tempId: string) {

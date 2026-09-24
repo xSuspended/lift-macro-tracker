@@ -149,6 +149,21 @@ export async function addSet(set: NewSet): Promise<WorkoutSet> {
   return data;
 }
 
+/** The parts of a set you can change after logging it. */
+export type SetPatch = {
+  reps: number;
+  weight_kg: number;
+  rpe: number | null;
+  is_warmup: boolean;
+  note: string | null;
+};
+
+export async function updateSet(id: string, patch: SetPatch): Promise<WorkoutSet> {
+  const { data, error } = await supabase.from('workout_sets').update(patch).eq('id', id).select(SET_COLUMNS).single();
+  if (error) throw error;
+  return data;
+}
+
 export async function deleteSet(id: string) {
   const { error } = await supabase.from('workout_sets').delete().eq('id', id);
   if (error) throw error;

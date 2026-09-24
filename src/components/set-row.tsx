@@ -15,10 +15,11 @@ type Props = {
   note?: string | null;
   /** Saved on the device only, waiting for signal. */
   pending?: boolean;
+  onEdit?: () => void;
   onDelete?: () => void;
 };
 
-export function SetRow({ label, weightKg, reps, rpe, isWarmup, note, pending, onDelete }: Props) {
+export function SetRow({ label, weightKg, reps, rpe, isWarmup, note, pending, onEdit, onDelete }: Props) {
   const { unit } = useUnits();
   return (
     <View style={[styles.row, !onDelete && styles.rowReadOnly]}>
@@ -32,6 +33,15 @@ export function SetRow({ label, weightKg, reps, rpe, isWarmup, note, pending, on
       {rpe !== null ? <Text style={styles.rpe}>RPE {formatNumber(rpe)}</Text> : null}
       {pending ? (
         <Ionicons name="cloud-offline-outline" size={18} color={colors.warning} accessibilityLabel="Waiting for signal" />
+      ) : null}
+      {onEdit ? (
+        <Pressable
+          accessibilityLabel="Edit set"
+          onPress={onEdit}
+          hitSlop={8}
+          style={({ pressed }) => [styles.icon, pressed && styles.pressed]}>
+          <Ionicons name="pencil" size={18} color={colors.textDim} />
+        </Pressable>
       ) : null}
       {onDelete ? (
         <Pressable
@@ -69,6 +79,13 @@ const styles = StyleSheet.create({
   note: { color: colors.textDim, fontSize: 13, fontStyle: 'italic', lineHeight: 18 },
   dim: { color: colors.textDim },
   rpe: { color: colors.textDim, fontSize: 13 },
+  icon: {
+    width: 40,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radius.sm,
+  },
   delete: {
     width: 44,
     height: 44,

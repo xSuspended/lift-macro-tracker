@@ -4,6 +4,7 @@ import { ActivityIndicator, AppState, ScrollView, StyleSheet, Text, View } from 
 import { Button } from '@/components/button';
 import { Elapsed } from '@/components/elapsed';
 import { ExerciseCard } from '@/components/exercise-card';
+import { EditSetSheet } from '@/components/edit-set-sheet';
 import { ExercisePicker } from '@/components/exercise-picker';
 import { LastTime } from '@/components/last-time';
 import { SetEntry, type SetValues } from '@/components/set-entry';
@@ -12,7 +13,7 @@ import { errorMessage, formatTime } from '@/lib/format';
 import { forgetRoutine, getRememberedRoutineId } from '@/lib/plans';
 import { DEFAULT_TARGET, suggestNext } from '@/lib/progression';
 import { getRoutine } from '@/lib/routines';
-import { addSetOrQueue, flushPendingSets, pendingSetsFor, removePendingSet } from '@/lib/set-queue';
+import { addSetOrQueue, flushPendingSets, pendingSetsFor, removePendingSet, updatePendingSet } from '@/lib/set-queue';
 import { colors, spacing } from '@/lib/theme';
 import { formatWeight, toKg, useUnits } from '@/lib/units';
 import type { Exercise, LoggedSet, Routine, RoutineExercise, WorkoutDetail } from '@/lib/types';
@@ -22,8 +23,10 @@ import {
   finishWorkout,
   getLastSession,
   groupByExercise,
+  updateSet,
   type ExerciseGroup,
   type LastSession,
+  type SetPatch,
 } from '@/lib/workouts';
 
 // Starting values for an exercise you've never logged before: an empty
@@ -51,6 +54,7 @@ export function ActiveWorkout({ workout, onFinished, onDeleted }: Props) {
   // Previous session per exercise id; a missing key means not loaded yet.
   const [lastSessions, setLastSessions] = useState<Record<string, LastSession | null>>({});
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [editing, setEditing] = useState<LoggedSet | null>(null);
   const [finishing, setFinishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -175,6 +179,15 @@ export function ActiveWorkout({ workout, onFinished, onDeleted }: Props) {
     setSets((prev) => [...prev, { ...set, exercise_name: selected.name, pending }]);
   }
 
+  async function handleEditSet(set: LoggedSet, patch: SetPatch) {
+    // Sets still waiting for signal are changed on the phone instead.
+    const updated = set.pending ? await updatePendingSet(set.id, patch) : await updateSet(set.id, patch);
+    setSets((prev) =>
+      prev.map((s) => (s.id === set.id ? { ...updated, exercise_name: s.exercise_name, pending: s.pending } : s)),
+    );
+    setError(null);
+  }
+
   async function handleDeleteSet(set: LoggedSet) {
     const ok = await confirm(
       'Delete this set?',
@@ -276,6 +289,7 @@ export function ActiveWorkout({ workout, onFinished, onDeleted }: Props) {
             targetSets={row.plan?.target_sets}
             selected={row.exerciseId === selectedId}
             onSelect={() => setSelectedId(row.exerciseId)}
+            onEditSet={setEditing}
             onDeleteSet={handleDeleteSet}
           />
         ))}
@@ -300,6 +314,8 @@ export function ActiveWorkout({ workout, onFinished, onDeleted }: Props) {
           <LastTime session={lastSession} suggestion={suggestion} />
         </SetEntry>
       ) : null}
+
+      <EditSetSheet set={editing} onClose={() => setEditing(null)} onSave={handleEditSet} />
 
       <ExercisePicker visible={pickerOpen} onClose={() => setPickerOpen(false)} onPick={handlePick} />
     </View>

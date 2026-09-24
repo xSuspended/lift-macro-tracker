@@ -194,6 +194,13 @@ export default function WorkoutTab() {
                 <Button label="New routine" onPress={newRoutine} variant="secondary" disabled={busy} />
               </View>
             </View>
+            <Button
+              label="Add a shared routine"
+              onPress={() => router.push('/routine/import')}
+              variant="secondary"
+              disabled={busy}
+              compact
+            />
           </View>
 
           {history.length > 0 ? <Text style={styles.sectionLabel}>History</Text> : null}

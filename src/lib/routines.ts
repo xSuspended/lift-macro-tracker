@@ -36,7 +36,8 @@ export async function getRoutine(id: string): Promise<Routine | null> {
 
 export async function createRoutine(
   name: string,
-  items: { exercise_id: string; target_sets: number }[] = [],
+  // Every row needs the same keys: supabase-js batches them into one insert.
+  items: { exercise_id: string; target_sets: number; rep_min?: number; rep_max?: number; increment_kg?: number }[] = [],
 ): Promise<string> {
   const { data, error } = await supabase.from('routines').insert({ name }).select('id').single();
   if (error) throw error;

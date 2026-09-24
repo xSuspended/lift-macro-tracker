@@ -1,4 +1,4 @@
-import { Redirect, Stack } from 'expo-router';
+import { Redirect, Stack, useGlobalSearchParams, usePathname } from 'expo-router';
 
 import { LoadingScreen } from '@/components/screen';
 import { useAuth } from '@/lib/auth';
@@ -8,9 +8,13 @@ import { UnitsProvider } from '@/lib/units';
 /** Everything behind the login. Kicks you back to sign-in if logged out. */
 export default function AppLayout() {
   const { session, loading } = useAuth();
+  const pathname = usePathname();
+  const params = useGlobalSearchParams();
 
   if (loading) return <LoadingScreen />;
-  if (!session) return <Redirect href="/sign-in" />;
+  // Remember where you were going (e.g. a shared routine link) so signing in
+  // carries on there instead of dropping you on the workout tab.
+  if (!session) return <Redirect href={{ pathname: '/sign-in', params: { next: withQuery(pathname, params) } }} />;
 
   return (
     <UnitsProvider>
@@ -30,4 +34,13 @@ export default function AppLayout() {
       </Stack>
     </UnitsProvider>
   );
+}
+
+function withQuery(pathname: string, params: Record<string, string | string[] | undefined>) {
+  const query = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (typeof value === 'string') query.append(key, value);
+  }
+  const search = query.toString();
+  return search ? `${pathname}?${search}` : pathname;
 }

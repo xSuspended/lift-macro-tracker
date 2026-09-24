@@ -19,6 +19,8 @@ import {
   reorderRoutineExercises,
   setTargetSets,
 } from '@/lib/routines';
+import { routineLink } from '@/lib/routine-code';
+import { shareText } from '@/lib/share';
 import { colors, spacing } from '@/lib/theme';
 import type { Exercise, Routine, RoutineExercise } from '@/lib/types';
 
@@ -31,6 +33,8 @@ export default function RoutineScreen() {
   const [deleting, setDeleting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const [shareNote, setShareNote] = useState<string | null>(null);
+  const [shareLink, setShareLink] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const leave = useCallback(() => {
@@ -108,6 +112,26 @@ export default function RoutineScreen() {
       setError(errorMessage(e));
       refresh();
     });
+  }
+
+  // Packs the routine into a link. Whoever opens it gets their own copy.
+  async function handleShare() {
+    if (!routine) return;
+    const link = routineLink(routine);
+    setError(null);
+    try {
+      const result = await shareText(link, routine.name);
+      setShareNote(
+        result === 'copied'
+          ? 'Link copied. Paste it to whoever you want to send it to.'
+          : result === 'shared'
+            ? null
+            : 'Copy this link and send it:',
+      );
+      setShareLink(result === 'show-link' ? link : null);
+    } catch (e) {
+      setError(errorMessage(e));
+    }
   }
 
   // Edits already save as you make them; this confirms the name and takes you back.
@@ -204,6 +228,14 @@ export default function RoutineScreen() {
 
         <Button label="Save routine" onPress={handleSave} loading={saving} />
 
+        <Button label="Share routine" onPress={handleShare} variant="secondary" />
+        {shareNote ? <Text style={styles.shareNote}>{shareNote}</Text> : null}
+        {shareLink ? (
+          <Text style={styles.shareLink} selectable>
+            {shareLink}
+          </Text>
+        ) : null}
+
         <View style={styles.danger}>
           <Button label="Delete routine" onPress={handleDelete} variant="danger" loading={deleting} />
         </View>
@@ -228,5 +260,7 @@ const styles = StyleSheet.create({
   hint: { color: colors.textDim, fontSize: 13, marginBottom: spacing.xs },
   error: { color: colors.danger, fontSize: 15 },
   padded: { padding: spacing.xl },
+  shareNote: { color: colors.textDim, fontSize: 14 },
+  shareLink: { color: colors.accent, fontSize: 13, lineHeight: 18 },
   danger: { marginTop: spacing.xl },
 });

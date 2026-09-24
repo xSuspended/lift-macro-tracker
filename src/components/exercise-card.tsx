@@ -11,11 +11,12 @@ type Props = {
   targetSets?: number;
   selected?: boolean;
   onSelect?: () => void;
+  onEditSet?: (set: LoggedSet) => void;
   onDeleteSet?: (set: LoggedSet) => void;
 };
 
 /** One exercise and its sets. Tappable while logging, read-only in history. */
-export function ExerciseCard({ group, targetSets, selected, onSelect, onDeleteSet }: Props) {
+export function ExerciseCard({ group, targetSets, selected, onSelect, onEditSet, onDeleteSet }: Props) {
   const workingCount = group.sets.filter((s) => !s.is_warmup).length;
   const done = targetSets !== undefined && workingCount >= targetSets;
   let workingNumber = 0;
@@ -54,6 +55,7 @@ export function ExerciseCard({ group, targetSets, selected, onSelect, onDeleteSe
                 isWarmup={set.is_warmup}
                 note={set.note}
                 pending={set.pending}
+                onEdit={onEditSet ? () => onEditSet(set) : undefined}
                 onDelete={onDeleteSet ? () => onDeleteSet(set) : undefined}
               />
             );
