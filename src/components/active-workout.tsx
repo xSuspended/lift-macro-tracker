@@ -1,8 +1,18 @@
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, AppState, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  AppState,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+} from 'react-native';
 
 import { Button } from '@/components/button';
 import { Elapsed } from '@/components/elapsed';
+import { RestTimer } from '@/components/rest-timer';
 import { ExerciseCard } from '@/components/exercise-card';
 import { EditSetSheet } from '@/components/edit-set-sheet';
 import { ExercisePicker } from '@/components/exercise-picker';
@@ -55,6 +65,8 @@ export function ActiveWorkout({ workout, onFinished, onDeleted }: Props) {
   const [lastSessions, setLastSessions] = useState<Record<string, LastSession | null>>({});
   const [pickerOpen, setPickerOpen] = useState(false);
   const [editing, setEditing] = useState<LoggedSet | null>(null);
+  const [collapsed, setCollapsed] = useState(false);
+  const lastScrollY = useRef(0);
   const [finishing, setFinishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -177,6 +189,17 @@ export function ActiveWorkout({ workout, onFinished, onDeleted }: Props) {
       selected.name,
     );
     setSets((prev) => [...prev, { ...set, exercise_name: selected.name, pending }]);
+    setCollapsed(false);
+  }
+
+  // Scrolling down through your sets shrinks the entry panel so it stops
+  // covering them; scrolling back up brings it out again.
+  function handleScroll(event: NativeSyntheticEvent<NativeScrollEvent>) {
+    const y = event.nativeEvent.contentOffset.y;
+    const moved = y - lastScrollY.current;
+    if (Math.abs(moved) < 12) return;
+    lastScrollY.current = y;
+    setCollapsed(moved > 0 && y > 24);
   }
 
   async function handleEditSet(set: LoggedSet, patch: SetPatch) {
@@ -264,6 +287,7 @@ export function ActiveWorkout({ workout, onFinished, onDeleted }: Props) {
             {routine ? `${routine.name} · ` : ''}Started {formatTime(workout.started_at)}
           </Text>
         </View>
+        <RestTimer lastSetAt={sets.length ? sets[sets.length - 1].created_at : null} />
         <View style={styles.finish}>
           <Button label="Finish" onPress={handleFinish} variant="secondary" loading={finishing} />
         </View>
@@ -277,7 +301,11 @@ export function ActiveWorkout({ workout, onFinished, onDeleted }: Props) {
         </Text>
       ) : null}
 
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        scrollEventThrottle={16}
+        onScroll={handleScroll}>
         {rows.length === 0 ? (
           <Text style={styles.hint}>Add your first exercise to start logging sets.</Text>
         ) : null}
@@ -288,7 +316,10 @@ export function ActiveWorkout({ workout, onFinished, onDeleted }: Props) {
             group={row}
             targetSets={row.plan?.target_sets}
             selected={row.exerciseId === selectedId}
-            onSelect={() => setSelectedId(row.exerciseId)}
+            onSelect={() => {
+              setSelectedId(row.exerciseId);
+              setCollapsed(false);
+            }}
             onEditSet={setEditing}
             onDeleteSet={handleDeleteSet}
           />
@@ -310,7 +341,9 @@ export function ActiveWorkout({ workout, onFinished, onDeleted }: Props) {
           exerciseName={selected.name}
           initialWeightKg={lastSetToday?.weight_kg ?? suggestion?.weightKg ?? DEFAULT_WEIGHT_KG[unit]}
           initialReps={lastSetToday?.reps ?? suggestion?.reps ?? DEFAULT_REPS}
-          onAdd={handleAddSet}>
+          onAdd={handleAddSet}
+          collapsed={collapsed}
+          onExpand={() => setCollapsed(false)}>
           <LastTime session={lastSession} suggestion={suggestion} />
         </SetEntry>
       ) : null}
@@ -328,14 +361,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: spacing.md,
+    gap: spacing.sm,
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.md,
   },
   clock: { flex: 1, gap: 2 },
-  clockValue: { color: colors.text, fontSize: 28, fontWeight: '700' },
-  clockLabel: { color: colors.textDim, fontSize: 13 },
-  finish: { width: 120 },
+  clockValue: { color: colors.text, fontSize: 24, fontWeight: '700' },
+  clockLabel: { color: colors.textDim, fontSize: 12 },
+  finish: { width: 104 },
   error: { color: colors.danger, fontSize: 15, paddingHorizontal: spacing.lg, paddingBottom: spacing.md },
   content: { padding: spacing.lg, paddingTop: 0, gap: spacing.md },
   offline: { color: colors.warning, fontSize: 14, lineHeight: 20, paddingHorizontal: spacing.lg, paddingBottom: spacing.md },

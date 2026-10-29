@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { formatNumber } from '@/lib/format';
+import { formatNumber, formatTime } from '@/lib/format';
 import { colors, radius, spacing } from '@/lib/theme';
 import { formatWeight, useUnits } from '@/lib/units';
 
@@ -13,13 +13,15 @@ type Props = {
   rpe: number | null;
   isWarmup: boolean;
   note?: string | null;
+  /** When the set was logged, shown as a clock time. */
+  at?: string;
   /** Saved on the device only, waiting for signal. */
   pending?: boolean;
   onEdit?: () => void;
   onDelete?: () => void;
 };
 
-export function SetRow({ label, weightKg, reps, rpe, isWarmup, note, pending, onEdit, onDelete }: Props) {
+export function SetRow({ label, weightKg, reps, rpe, isWarmup, note, at, pending, onEdit, onDelete }: Props) {
   const { unit } = useUnits();
   return (
     <View style={[styles.row, !onDelete && styles.rowReadOnly]}>
@@ -31,6 +33,7 @@ export function SetRow({ label, weightKg, reps, rpe, isWarmup, note, pending, on
         {note ? <Text style={styles.note}>{note}</Text> : null}
       </View>
       {rpe !== null ? <Text style={styles.rpe}>RPE {formatNumber(rpe)}</Text> : null}
+      {at ? <Text style={styles.time}>{formatTime(at)}</Text> : null}
       {pending ? (
         <Ionicons name="cloud-offline-outline" size={18} color={colors.warning} accessibilityLabel="Waiting for signal" />
       ) : null}
@@ -79,6 +82,7 @@ const styles = StyleSheet.create({
   note: { color: colors.textDim, fontSize: 13, fontStyle: 'italic', lineHeight: 18 },
   dim: { color: colors.textDim },
   rpe: { color: colors.textDim, fontSize: 13 },
+  time: { color: colors.textDim, fontSize: 12, fontVariant: ['tabular-nums'] },
   icon: {
     width: 40,
     height: 44,

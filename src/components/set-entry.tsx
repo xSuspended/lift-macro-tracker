@@ -21,6 +21,9 @@ type Props = {
   initialWeightKg: number;
   initialReps: number;
   onAdd: (values: SetValues) => Promise<void>;
+  /** Shrink to a single bar, e.g. while scrolling back through logged sets. */
+  collapsed?: boolean;
+  onExpand?: () => void;
   /** Shown between the exercise name and the steppers. */
   children?: ReactNode;
 };
@@ -29,7 +32,7 @@ const RPE_MIN = 6;
 const RPE_MAX = 10;
 
 /** The dock pinned to the bottom of the workout screen for logging the next set. */
-export function SetEntry({ exerciseName, initialWeightKg, initialReps, onAdd, children }: Props) {
+export function SetEntry({ exerciseName, initialWeightKg, initialReps, onAdd, collapsed, onExpand, children }: Props) {
   const { unit } = useUnits();
   // The stepper works in your unit; the weight is turned back into kg when saved.
   const [weight, setWeight] = useState(toDisplay(initialWeightKg, unit));
@@ -62,6 +65,27 @@ export function SetEntry({ exerciseName, initialWeightKg, initialReps, onAdd, ch
     } finally {
       setBusy(false);
     }
+  }
+
+  // Shrunk to one line while you scroll back through your sets, so the panel
+  // never hides the set you're looking at. Tapping the bar opens it again.
+  if (collapsed) {
+    return (
+      <View style={styles.dock}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Open set entry for ${exerciseName}`}
+          onPress={onExpand}
+          style={({ pressed }) => [styles.collapsed, pressed && styles.pressed]}>
+          <Ionicons name="chevron-up" size={20} color={colors.textDim} />
+          <Text style={styles.collapsedText} numberOfLines={1}>
+            {exerciseName} · {formatNumber(weight)} {unit} × {reps}
+            {isWarmup ? ' · warm-up' : ''}
+          </Text>
+        </Pressable>
+        <Button label={isWarmup ? 'Add warm-up set' : 'Add set'} onPress={handleAdd} loading={busy} />
+      </View>
+    );
   }
 
   return (
@@ -151,6 +175,14 @@ const styles = StyleSheet.create({
     gap: spacing.sm + 2,
   },
   exercise: { color: colors.text, fontSize: 15, fontWeight: '600' },
+  collapsed: {
+    minHeight: 40,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    borderRadius: radius.md,
+  },
+  collapsedText: { flex: 1, color: colors.text, fontSize: 15, fontWeight: '600' },
   row: { flexDirection: 'row', gap: spacing.md },
   small: {
     flex: 1,
